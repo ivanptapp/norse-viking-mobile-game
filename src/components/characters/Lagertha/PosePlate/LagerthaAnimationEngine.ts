@@ -295,7 +295,8 @@ export class LagerthaAnimationEngine {
   }
 
   private drawEnergy(ctx: CanvasRenderingContext2D, x: number, y: number, h: number, direction: number, time: number, animation: LagerthaAnimation): void {
-    if (animation !== "ultimate" && animation !== "attack") return;
+    const isAttack = animation === "attack" || animation === "attack2" || animation === "attack3";
+    if (animation !== "ultimate" && !isAttack) return;
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(direction, 1);
@@ -315,8 +316,8 @@ export class LagerthaAnimationEngine {
       ctx.stroke();
     }
 
-    const slashStart = animation === "ultimate" ? 0.68 : 0.16;
-    const slashEnd = animation === "ultimate" ? 1.2 : 0.56;
+    const slashStart = animation === "ultimate" ? 0.68 : animation === "attack3" ? 0.48 : animation === "attack2" ? 0.38 : 0.16;
+    const slashEnd = animation === "ultimate" ? 1.2 : animation === "attack3" ? 0.82 : animation === "attack2" ? 0.7 : 0.56;
     if (t >= slashStart && t <= slashEnd) {
       const u = clamp01((t - slashStart) / (slashEnd - slashStart));
       const fade = Math.min(1, u * 9, (1 - u) * 5);

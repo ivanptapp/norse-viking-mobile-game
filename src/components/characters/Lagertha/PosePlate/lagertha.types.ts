@@ -2,6 +2,8 @@ export type LagerthaAnimation =
   | "idle"
   | "move"
   | "attack"
+  | "attack2"
+  | "attack3"
   | "hit"
   | "ultimate"
   | "victory"

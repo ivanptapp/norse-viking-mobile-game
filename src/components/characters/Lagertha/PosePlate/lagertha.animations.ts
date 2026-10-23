@@ -45,6 +45,43 @@ export const LAGERTHA_ANIMATIONS: Record<LagerthaAnimation, AnimationDefinition>
       { at: 0.43, name: "impact" },
     ],
   },
+  attack2: {
+    duration: 0.92,
+    loop: false,
+    returnTo: "idle",
+    keyframes: [
+      { at: 0, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
+      { at: 0.14, pose: "crouch", x: -7, y: 0, rotation: -1.5, scale: 0.985 },
+      { at: 0.31, pose: "chamber", x: -9, y: -2, rotation: -1, scale: 0.985 },
+      { at: 0.46, pose: "follow", x: 16, y: -1, rotation: 1.8, scale: 1.025 },
+      { at: 0.59, pose: "slash", x: 19, y: 1, rotation: 1, scale: 1.02 },
+      { at: 0.76, pose: "reference", x: 7, y: 0, rotation: 0, scale: 1.005 },
+      { at: 0.92, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
+    ],
+    events: [
+      { at: 0, name: "attackStarted" },
+      { at: 0.47, name: "impact" },
+    ],
+  },
+  attack3: {
+    duration: 1.04,
+    loop: false,
+    returnTo: "idle",
+    keyframes: [
+      { at: 0, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
+      { at: 0.16, pose: "crouch", x: -8, y: 2, rotation: 2, scale: 0.98 },
+      { at: 0.34, pose: "spin", x: -4, y: -1, rotation: 8, scale: 0.99 },
+      { at: 0.51, pose: "slash", x: 14, y: -2, rotation: -2, scale: 1.025 },
+      { at: 0.64, pose: "impact", x: 20, y: 0, rotation: 1, scale: 1.035 },
+      { at: 0.78, pose: "follow", x: 14, y: 1, rotation: 2, scale: 1.02 },
+      { at: 0.91, pose: "reference", x: 5, y: 0, rotation: 0, scale: 1.005 },
+      { at: 1.04, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
+    ],
+    events: [
+      { at: 0, name: "attackStarted" },
+      { at: 0.64, name: "impact" },
+    ],
+  },
   hit: {
     duration: 0.44,
     loop: false,

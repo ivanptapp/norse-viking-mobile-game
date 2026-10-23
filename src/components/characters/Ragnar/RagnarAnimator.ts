@@ -16,6 +16,8 @@ const PRIORITY: Record<RagnarState, number> = {
   jump: 20,
   victory: 30,
   attack: 40,
+  attack2: 40,
+  attack3: 40,
   hit: 60,
   death: 100,
 };
@@ -25,6 +27,8 @@ const FADE: Record<RagnarState, number> = {
   walk: 0.2,
   run: 0.18,
   attack: 0.1,
+  attack2: 0.1,
+  attack3: 0.1,
   hit: 0.06,
   death: 0.22,
   victory: 0.22,

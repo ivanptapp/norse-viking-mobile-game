@@ -63,6 +63,10 @@ const SCRIPT: Blueprint[] = [
     ],
   },
   { actor: 13, targets: [4], skill: "Estocada Lunar", kind: "single", amount: 400 },
+  { actor: 0, targets: [3], skill: "Barrido de escudo y hacha", kind: "single", amount: 390 },
+  { actor: 1, targets: [0], skill: "Giro de la doncella", kind: "single", amount: 430 },
+  { actor: 0, targets: [4], skill: "Hachazo del cuervo", kind: "single", amount: 440 },
+  { actor: 1, targets: [2], skill: "Corte de retorno", kind: "single", amount: 450 },
   {
     actor: 0,
     targets: [0, 1, 2],

@@ -1081,6 +1081,8 @@ export default function GamePage() {
                     return (
                       <button
                         key={sid}
+                        title={info.stageName}
+                        aria-label={`${info.stageName}${info.isBoss ? ", jefe" : ""}`}
                         disabled={locked}
                         onClick={() => setStageSel(sid)}
                         className={`campaign-stage relative aspect-square rounded-2xl flex flex-col items-center justify-center font-display font-black border-2 ${cleared ? "bg-teal-900/70 border-teal-600 text-teal-200" : isNext ? "bg-amber-500 border-amber-300 text-black glow-gold" : "bg-black/60 border-stone-700 text-stone-500"}`}
@@ -1824,9 +1826,10 @@ export default function GamePage() {
                 <h3 className="font-display font-black text-amber-300">
                   {info.chapter.name}
                 </h3>
-                <p className="text-sm text-stone-300">
-                  Etapa {info.within}
-                  {info.isBoss ? " · JEFE" : ""} · Nv.{info.enemyLevel}
+                <p className="text-sm font-bold text-stone-100">{info.stageName}</p>
+                <p className="text-xs leading-relaxed text-stone-300">{info.story}</p>
+                <p className="text-[11px] text-stone-400">
+                  Etapa {info.within}{info.isBoss ? " · JEFE" : ""} · Nv.{info.enemyLevel}
                 </p>
                 <div className="flex gap-2 justify-center my-3">
                   {info.enemies.map((id, i) => (

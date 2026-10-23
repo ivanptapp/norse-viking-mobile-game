@@ -124,6 +124,8 @@ interface UnitView {
   shield?: number;
   /** Duración del desplazamiento en curso (ms a velocidad 1). */
   moveMs?: number;
+  /** Per-hero attack choreography; damage and targeting remain unchanged. */
+  attackVariant: 0 | 1 | 2;
 }
 
 /**
@@ -145,16 +147,22 @@ const LANES = [
 const DOCK_HEIGHT = 128;
 /** Duración de la presentación de una definitiva dibujada. */
 const CUTIN_MS = 1150;
+/** Authored Ragnar clip timings in ms; keep damage and retreat on the visual beat. */
+const RAGNAR_ATTACK_IMPACT_MS = [460, 460, 510] as const;
+const RAGNAR_ATTACK_RECOVERY_MS = [790, 660, 670] as const;
 const POS_ORDER: Record<string, number> = { front: 0, mid: 1, back: 2 };
 
-function lagerthaAnimationFor(state: FigureState): LagerthaAnimation {
+function lagerthaAnimationFor(state: FigureState, attackVariant = 0): LagerthaAnimation {
   switch (state) {
     case "walk": return "move";
     case "dead": return "defeat";
     case "cast": return "ultimate";
     case "victory": return "victory";
     case "attack":
-    case "shoot": return "attack";
+    case "shoot": {
+      const variants: LagerthaAnimation[] = ["attack", "attack2", "attack3"];
+      return variants[((attackVariant % 3) + 3) % 3];
+    }
     case "hit": return "hit";
     default: return "idle";
   }
@@ -262,6 +270,7 @@ export function BattleOverlay({
           dy: 0,
           moving: false,
           dead: false,
+          attackVariant: 0,
         }),
     );
     return m;
@@ -305,7 +314,7 @@ export function BattleOverlay({
     }
     const unit = unitsRef.current[unitId];
     const adapter = lagerthaAdaptersRef.current.get(unitId);
-    const playbackId = unit && adapter?.play(unit.dead ? "defeat" : lagerthaAnimationFor(unit.anim), { restart: true });
+    const playbackId = unit && adapter?.play(unit.dead ? "defeat" : lagerthaAnimationFor(unit.anim, unit.attackVariant), { restart: true });
     if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(unitId, playbackId);
   }, [onLagerthaEvent]);
 
@@ -420,7 +429,7 @@ export function BattleOverlay({
       if (p[k].anim !== undefined && byUid[k]?.heroId.toLowerCase() === "lagertha") {
         const adapter = lagerthaAdaptersRef.current.get(k);
         if (adapter) {
-          const animation = next[k].dead ? "defeat" : lagerthaAnimationFor(next[k].anim);
+          const animation = next[k].dead ? "defeat" : lagerthaAnimationFor(next[k].anim, next[k].attackVariant);
           const playbackId = adapter.play(animation, { restart: true });
           if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(k, playbackId);
         }
@@ -677,6 +686,12 @@ export function BattleOverlay({
       sfx("horn");
       await sleep(1000);
       setIntro(false);
+      const attackCycles = new Map<string, number>();
+      const nextAttackVariant = (uid: string): 0 | 1 | 2 => {
+        const next = ((attackCycles.get(uid) ?? -1) + 1) % 3;
+        attackCycles.set(uid, next);
+        return next as 0 | 1 | 2;
+      };
 
       for (let i = 0; i < battle.steps.length; i++) {
         if (cancelRef.current || !alive) return;
@@ -687,14 +702,15 @@ export function BattleOverlay({
         setLog(s.log);
 
         const def = heroById(byUid[s.actor].heroId);
-        const isLagertha = byUid[s.actor].heroId.toLowerCase() === "lagertha";
+        const actorHeroId = byUid[s.actor].heroId.toLowerCase();
+        const isLagertha = actorHeroId === "lagertha";
+        const isRagnar = actorHeroId === "ragnar";
         const m = metric(s.actor);
         const sig = signatureFor(byUid[s.actor].heroId);
         const heal = s.heals.length > 0;
 
         if (s.ult) {
           const actor = byUid[s.actor];
-          const isRagnar = actor.heroId.toLowerCase() === "ragnar";
 
           sfx("ult");
 
@@ -768,7 +784,8 @@ export function BattleOverlay({
 
           patch({ [s.actor]: { anim: "idle" } });
         } else if (sig.approach === "stand" || isRanged(def)) {
-          patch({ [s.actor]: { anim: "shoot" } });
+          const attackVariant = isRagnar || isLagertha ? nextAttackVariant(s.actor) : undefined;
+          patch({ [s.actor]: { anim: "shoot", ...(attackVariant !== undefined ? { attackVariant } : {}) } });
           const lagerthaPlaybackId = isLagertha ? (lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1) : -1;
           await sleep(sig.style === "volley" ? 130 : 190);
 
@@ -855,9 +872,10 @@ export function BattleOverlay({
           const dy = 0;
           const blink = sig.approach === "blink";
           const moveMs =
-            byUid[s.actor].heroId.toLowerCase() === "ragnar"
-              ? 1200
+            isRagnar
+              ? 680
               : APPROACH_MS[sig.approach] || 600;
+          const attackVariant = isRagnar || isLagertha ? nextAttackVariant(s.actor) : undefined;
 
           if (blink) {
             addFx({ kind: "spark", x: m.x, y: m.y - m.chest, color: sig.trail }, 320);
@@ -873,6 +891,7 @@ export function BattleOverlay({
               moving: true,
               anim: blink ? "attack" : "walk",
               moveMs,
+              ...(attackVariant !== undefined ? { attackVariant } : {}),
             },
           });
 
@@ -886,7 +905,7 @@ export function BattleOverlay({
             const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
             await waitForLagerthaEvent(s.actor, playbackId, "impact", 930);
           } else {
-            await sleep(sig.windup);
+            await sleep(isRagnar ? RAGNAR_ATTACK_IMPACT_MS[attackVariant ?? 0] : sig.windup);
           }
 
           if (cancelRef.current || !alive) return;
@@ -896,7 +915,7 @@ export function BattleOverlay({
             const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
             await waitForLagerthaEvent(s.actor, playbackId, "animationFinished", 1380);
           } else {
-            await sleep(320);
+            await sleep(isRagnar ? RAGNAR_ATTACK_RECOVERY_MS[attackVariant ?? 0] : 320);
           }
 
           if (cancelRef.current || !alive) return;
@@ -1273,6 +1292,7 @@ export function BattleOverlay({
                         state={u.dead ? "dead" : u.anim}
                         battleUnitId={f.uid}
                         battleSpeed={speed}
+                        attackVariant={u.attackVariant}
                         onLagerthaHandle={onLagerthaHandle}
                         onLagerthaEvent={onLagerthaFigureEvent}
                         delay={

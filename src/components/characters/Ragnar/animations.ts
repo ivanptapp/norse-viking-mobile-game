@@ -33,7 +33,7 @@ function loopClip(
  * IDLE — breathing, tiny weight shifts, cloth and hair follow-through
  * ------------------------------------------------------------------ */
 
-const idle = loopClip(3.6, 12, (u) => {
+const idle = loopClip(3.6, 24, (u) => {
   const t = u * TAU;
   return {
     rootY: 0.9 * Math.sin(t),
@@ -73,59 +73,62 @@ function legCycle(
   return [hip, flex, ankle];
 }
 
-const walk = loopClip(1.05, 16, (u) => {
-  const p = u;
-  const t = p * TAU;
-  const near = legCycle(p, 8, 46, 4);
-  const far = legCycle(p + 0.5, 8, 46, 4);
-  const axe = Math.cos(t);
+const walk = loopClip(0.96, 24, (u) => {
+  const t = u * TAU;
+  const near = legCycle(u, 9, 38, 3.5);
+  const far = legCycle(u + 0.5, 9, 38, 3.5);
+  const stride = Math.sin(t);
+  const counter = Math.cos(t);
   return {
-    rootX: 1.4 * Math.sin(t + 0.5),
-    rootY: -1 + 1.1 * Math.cos(2 * t),
-    hipsRot: 2.8 * Math.cos(t) - 0.6,
-    spineRot: 3.2 * Math.cos(t) + 1.2,
-    spineY: -0.6,
-    chest: 0.45 + 0.2 * Math.cos(2 * t),
-    neckRot: -1.4 * Math.cos(t),
-    headRot: 1.1 * Math.sin(t),
+    // Keep the pelvis low and let the knees absorb the step instead of bobbing like a puppet.
+    rootX: 0.7 * Math.sin(t + 0.35),
+    rootY: -0.6 + 1.15 * Math.max(0, Math.cos(2 * t)),
+    rootRot: 0.45 * Math.sin(t),
+    hipsRot: 2.2 * counter - 0.5,
+    spineRot: -2.4 * counter + 1.1,
+    spineY: -0.3 + 0.45 * Math.sin(2 * t + 0.4),
+    chest: 0.42 + 0.16 * Math.sin(t + 0.8),
+    neckRot: -0.7 * counter,
+    headRot: 0.8 * Math.sin(t * 0.5 + 0.4),
     legNear: near,
     legFar: far,
-    axeArm: [24 + 9 * axe, 112 + 6 * axe, -128 - 8 * axe],
-    shieldArm: [10 - 4 * axe, 55 + 3 * axe, -65 + 1],
-    cloak: [-3 + 3.2 * Math.cos(t + 0.5), 3 + 2.6 * Math.cos(t + 1.1), 5 + 3.4 * Math.cos(t + 1.7)],
-    hair: 2.4 * Math.sin(t + 0.4),
-    braid: 3.4 * Math.sin(t + 0.1),
-    beard: 1.8 * Math.sin(t + 0.6),
-    axe: 1.6 * Math.sin(t),
-    shield: 1.2 * Math.sin(t + 0.4),
+    // Arms counter-swing the legs; wrists and weapon lag a few frames behind.
+    axeArm: [21 + 8 * stride, 101 + 4 * counter, -116 - 5 * stride],
+    shieldArm: [8 - 5 * stride, 59 - 3 * counter, -68 + 2 * stride],
+    cloak: [-3 + 2.2 * Math.cos(t + 0.8), 3 + 2.7 * Math.cos(t + 1.35), 5 + 3.1 * Math.cos(t + 1.9)],
+    hair: 1.8 * Math.sin(t + 0.55),
+    braid: 2.8 * Math.sin(t + 0.15),
+    beard: 1.2 * Math.sin(t + 0.7),
+    axe: 1.1 * Math.sin(t + 1.15),
+    shield: 0.9 * Math.sin(t + 0.3),
   };
 });
 
-const run = loopClip(0.66, 12, (u) => {
-  const p = u;
-  const t = p * TAU;
-  const near = legCycle(p, 12, 72, 8);
-  const far = legCycle(p + 0.5, 12, 72, 8);
-  const axe = Math.cos(t);
+const run = loopClip(0.68, 20, (u) => {
+  const t = u * TAU;
+  const near = legCycle(u, 12, 58, 7);
+  const far = legCycle(u + 0.5, 12, 58, 7);
+  const stride = Math.sin(t);
   return {
-    rootX: 2.4 * Math.sin(t + 0.4),
-    rootY: -4 + 3.2 * Math.cos(2 * t),
-    hipsRot: 4.6 * Math.cos(t) - 1,
-    spineRot: 12 + 3.4 * Math.cos(t),
-    spineY: -1.6,
-    chest: 0.85,
-    neckRot: -6 - 1.6 * Math.cos(t),
-    headRot: 1.6 - 1.2 * Math.cos(t),
+    rootX: 1.2 * Math.sin(t + 0.3),
+    rootY: -2.2 + 2.2 * Math.max(0, Math.cos(2 * t)),
+    rootRot: 0.8 * Math.sin(t),
+    hipsRot: 3.8 * Math.cos(t) - 0.8,
+    spineRot: 8 + 2.6 * Math.cos(t + 0.25),
+    spineY: -1,
+    chest: 0.72 + 0.12 * Math.sin(t + 0.6),
+    neckRot: -3 - 1.1 * Math.cos(t),
+    headRot: 1.3 * Math.sin(t + 0.2),
     legNear: near,
     legFar: far,
-    axeArm: [18 + 26 * axe, 104 + 14 * axe, -116 - 20 * axe],
-    shieldArm: [-2 - 6 * axe, 74 + 5 * axe, -72],
-    cloak: [15 + 5 * Math.cos(t + 0.6), 11 + 4.4 * Math.cos(t + 1.2), 8 + 5 * Math.cos(t + 1.8)],
-    hair: 6 + 3.2 * Math.sin(t),
-    braid: 8 + 4.6 * Math.sin(t + 0.3),
-    beard: 4 + 2.4 * Math.sin(t + 0.5),
-    axe: 4 * Math.sin(t),
-    shield: 2.4 * Math.sin(t + 0.5),
+    axeArm: [17 + 20 * stride, 103 + 9 * stride, -116 - 14 * stride],
+    shieldArm: [-1 - 8 * stride, 70 + 4 * stride, -72],
+    cloak: [12 + 4 * Math.cos(t + 0.6), 10 + 4 * Math.cos(t + 1.2), 8 + 4.6 * Math.cos(t + 1.8)],
+    hair: 5 + 2.5 * Math.sin(t),
+    braid: 7 + 3.5 * Math.sin(t + 0.3),
+    beard: 3 + 1.8 * Math.sin(t + 0.5),
+    axe: 3.2 * Math.sin(t),
+    shield: 1.8 * Math.sin(t + 0.4),
   };
 });
 
@@ -239,6 +242,101 @@ const attack: RagnarClip = {
       "inOut",
     ),
     key(1.15, {}, "inOut"),
+  ],
+};
+
+/* ------------------------------------------------------------------ *
+ * ATTACK 2 — shield check into a broad returning axe cut
+ * Each strike has a planted base, a hip-led turn and delayed cloak/hair follow-through.
+ * ------------------------------------------------------------------ */
+const attack2: RagnarClip = {
+  duration: 1.02,
+  loop: false,
+  autoReturn: "idle",
+  keys: [
+    key(0, {}),
+    key(0.16, {
+      rootX: -8, rootY: 2, hipsRot: -7, spineRot: -8, spineY: -1,
+      headRot: -2, neckRot: -2, axeArm: [35, 132, -150], axe: -5,
+      shieldArm: [22, 35, -28], shield: -9,
+      legNear: [14, 12, -26], legFar: [-14, 9, 8],
+      cloak: [-8, -4, -1], hair: -2, braid: -3, beard: -1,
+    }, "out"),
+    key(0.31, {
+      rootX: -13, rootY: 1, hipsRot: -11, spineRot: -13, spineY: -2,
+      headRot: -4, neckRot: -3, axeArm: [53, 144, -169], axe: -12,
+      shieldArm: [35, 25, -17], shield: -14,
+      legNear: [18, 15, -32], legFar: [-18, 12, 10],
+      cloak: [-12, -8, -3], hair: -4, braid: -6, beard: -2,
+    }, "in"),
+    key(0.46, {
+      rootX: 13, rootY: 1, hipsRot: 10, spineRot: 15, spineY: 1,
+      headRot: 5, neckRot: 3, axeArm: [-30, 22, 26], axe: 62,
+      shieldArm: [12, 56, -64], shield: 8,
+      legNear: [25, 23, -43], legFar: [-22, 19, 4],
+      cloak: [10, 9, 8], hair: 4, braid: 7, beard: 3,
+    }, "snap"),
+    key(0.61, {
+      rootX: 17, rootY: 0, hipsRot: 8, spineRot: 18, spineY: 1,
+      headRot: 4, neckRot: 2, axeArm: [-18, 42, 12], axe: 48,
+      shieldArm: [8, 62, -68],
+      legNear: [22, 18, -37], legFar: [-18, 16, 2],
+      cloak: [14, 12, 9], hair: 5, braid: 8, beard: 4,
+    }, "out"),
+    key(0.81, {
+      rootX: 6, hipsRot: 2, spineRot: 6, spineY: 0,
+      axeArm: [18, 96, -104], axe: 18, shieldArm: [11, 54, -64],
+      legNear: [13, 7, -20], legFar: [-12, 7, 7],
+      cloak: [5, 6, 6], hair: 2, braid: 4, beard: 1,
+    }, "inOut"),
+    key(1.02, {}, "inOut"),
+  ],
+};
+
+/* ------------------------------------------------------------------ *
+ * ATTACK 3 — a short pivot step and committed overhead chop
+ * ------------------------------------------------------------------ */
+const attack3: RagnarClip = {
+  duration: 1.08,
+  loop: false,
+  autoReturn: "idle",
+  keys: [
+    key(0, {}),
+    key(0.17, {
+      rootX: -9, rootY: 3, hipsRot: 8, spineRot: 10, spineY: 1,
+      neckRot: 2, headRot: 3, axeArm: [44, 148, -171], axe: -18,
+      shieldArm: [4, 67, -78], shield: -8,
+      legNear: [21, 22, -39], legFar: [-17, 8, 5],
+      cloak: [6, 4, 2], hair: 2, braid: 4,
+    }, "out"),
+    key(0.34, {
+      rootX: -15, rootY: 0, hipsRot: 12, spineRot: 14, spineY: 1,
+      neckRot: 1, headRot: 2, axeArm: [70, 158, -177], axe: -25,
+      shieldArm: [8, 72, -82], shield: -10,
+      legNear: [28, 28, -48], legFar: [-20, 12, 5],
+      cloak: [11, 8, 4], hair: 3, braid: 7, beard: 2,
+    }, "in"),
+    key(0.51, {
+      rootX: 16, rootY: 2, hipsRot: -8, spineRot: -8, spineY: -1,
+      neckRot: -2, headRot: -3, axeArm: [-56, 20, 6], axe: 82,
+      shieldArm: [20, 43, -54], shield: 13,
+      legNear: [31, 31, -54], legFar: [-23, 24, 0],
+      cloak: [-10, -8, -4], hair: -4, braid: -7, beard: -3,
+    }, "snap"),
+    key(0.68, {
+      rootX: 20, rootY: 2, hipsRot: -4, spineRot: -2, spineY: 0,
+      neckRot: 0, headRot: 1, axeArm: [-32, 38, -5], axe: 58,
+      shieldArm: [14, 51, -62],
+      legNear: [24, 24, -42], legFar: [-18, 20, -2],
+      cloak: [-8, -5, 0], hair: -2, braid: -4, beard: -1,
+    }, "out"),
+    key(0.86, {
+      rootX: 8, hipsRot: 0, spineRot: 4, spineY: 0,
+      axeArm: [16, 93, -106], axe: 20, shieldArm: [10, 55, -65],
+      legNear: [14, 8, -21], legFar: [-13, 7, 7],
+      cloak: [4, 5, 6], hair: 1, braid: 3, beard: 1,
+    }, "inOut"),
+    key(1.08, {}, "inOut"),
   ],
 };
 
@@ -701,6 +799,8 @@ export const RAGNAR_CLIPS: Record<RagnarState, RagnarClip> = {
   walk,
   run,
   attack,
+  attack2,
+  attack3,
   hit,
   death,
   victory,

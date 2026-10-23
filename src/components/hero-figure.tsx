@@ -20,7 +20,7 @@ export type FigureState =
 /** Battle figure states → Ragnar's articulated clips. */
 const RAGNAR_STATE_MAP: Record<FigureState, RagnarState> = {
   idle: "idle",
-  walk: "walk",
+  walk: "run",
   attack: "attack",
   hit: "hit",
   dead: "death",
@@ -41,6 +41,18 @@ const FENRIR_STATE_MAP: Record<FigureState, FenrirState> = {
   victory: "howl",
 };
 
+function attackVariantIndex(variant: number): 0 | 1 | 2 {
+  return (((Math.floor(variant) % 3) + 3) % 3) as 0 | 1 | 2;
+}
+
+function ragnarAnimationFor(state: FigureState, variant: number): RagnarState {
+  if (state === "attack" || state === "shoot") {
+    const variants: RagnarState[] = ["attack", "attack2", "attack3"];
+    return variants[attackVariantIndex(variant)];
+  }
+  return RAGNAR_STATE_MAP[state];
+}
+
 const LAGERTHA_ANIMATION_MAP: Record<FigureState, LagerthaAnimation> = {
   idle: "idle",
   walk: "move",
@@ -52,6 +64,14 @@ const LAGERTHA_ANIMATION_MAP: Record<FigureState, LagerthaAnimation> = {
   victory: "victory",
 };
 
+function lagerthaAnimationFor(state: FigureState, variant: number): LagerthaAnimation {
+  if (state === "attack" || state === "shoot") {
+    const variants: LagerthaAnimation[] = ["attack", "attack2", "attack3"];
+    return variants[attackVariantIndex(variant)];
+  }
+  return LAGERTHA_ANIMATION_MAP[state];
+}
+
 type HeroFigureProps = {
   heroId: string;
   size?: number;
@@ -59,6 +79,8 @@ type HeroFigureProps = {
   delay?: number;
   battleUnitId?: string;
   battleSpeed?: number;
+  /** Cycles authored attack choreography without changing turn/damage logic. */
+  attackVariant?: number;
   onLagerthaHandle?: (unitId: string, handle: LagerthaCharacterHandle | null) => void;
   onLagerthaEvent?: (unitId: string, event: LagerthaAnimationEvent) => void;
 };
@@ -76,6 +98,7 @@ export function HeroFigure({
   delay = 0,
   battleUnitId,
   battleSpeed = 1,
+  attackVariant = 0,
   onLagerthaHandle,
   onLagerthaEvent,
 }: HeroFigureProps) {
@@ -112,7 +135,7 @@ export function HeroFigure({
           <RagnarCharacter
             art="kit"
             frame="full"
-            state={RAGNAR_STATE_MAP[state]}
+            state={ragnarAnimationFor(state, attackVariant)}
           />
         </div>
       ) : isFenrir ? (
@@ -123,7 +146,7 @@ export function HeroFigure({
         <div className="hero-figure__lagertha">
           <LagerthaPosePlate
             ref={lagerthaHandleRef}
-            animation={LAGERTHA_ANIMATION_MAP[state]}
+            animation={lagerthaAnimationFor(state, attackVariant)}
             assetBaseUrl="/characters/lagertha-poses"
             battleSpeed={battleSpeed}
             x={size * 0.8}

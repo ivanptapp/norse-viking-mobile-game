@@ -236,7 +236,16 @@ export async function POST(req: Request) {
       // runas -> bonus aplicado a fighters (solo visual, pero potencia real via stats extra)
       const heroRunes = (player.heroRunes as Record<string, string[]>) || {};
 
-      const CHAPTER_BG = ["/images/bf-coast.jpg", "/images/bf-forest.jpg", "/images/bf-village.jpg", "/images/bf-helheim.jpg", "/images/bf-ragnarok.jpg"];
+      const CHAPTER_BG = [
+        "/images/bf-coast.jpg",
+        "/images/bf-forest.jpg",
+        "/images/bf-village.jpg",
+        "/images/bf-helheim.jpg",
+        "/images/bf-ragnarok.jpg",
+        "/images/bf-forest.jpg",
+        "/images/bf-helheim.jpg",
+        "/images/valhalla.jpg",
+      ];
       let background = CHAPTER_BG[0];
       let enemyIds: string[] = [], enemyLevel = 1, scale = 1, rewards: { gold: number; exp: number; gems: number } = { gold: 0, exp: 0, gems: 0 }, stageId: number | null = null, enemyName = "Enemigos";
 
@@ -262,7 +271,7 @@ export async function POST(req: Request) {
         const info = stageInfo(stageId);
         enemyIds = info.enemies; enemyLevel = info.enemyLevel; scale = info.scale;
         rewards = { ...info.rewards };
-        enemyName = `${info.chapter.name} · Etapa ${info.within}${info.isBoss ? " · JEFE" : ""}`;
+        enemyName = `${info.chapter.name} · ${info.stageName}${info.isBoss ? " · JEFE" : ""}`;
         background = CHAPTER_BG[info.chapter.id - 1] ?? CHAPTER_BG[0];
         await db.update(players).set({ energy: player.energy - 6 }).where(eq(players.id, playerId));
       } else if (mode === "tower") {

@@ -723,11 +723,14 @@ export function heroStats(def: HeroDef, level: number, stars: number) {
 
 // ---------- Campaña ----------
 export const CHAPTERS = [
-  { id: 1, name: "La Costa de Kattegat", img: "/images/drakkar.jpg", desc: "Defiende el puerto de los saqueadores de Vestfold." },
-  { id: 2, name: "El Bosque de Hierro", img: "/images/yggdrasil.jpg", desc: "Lobos gigantes y brujas acechan entre los árboles." },
+  { id: 1, name: "La Costa de Kattegat", img: "/images/bf-coast.jpg", desc: "Defiende el puerto de los saqueadores de Vestfold." },
+  { id: 2, name: "El Bosque de Hierro", img: "/images/bf-forest.jpg", desc: "Lobos gigantes y brujas acechan entre los árboles." },
   { id: 3, name: "Saqueo de Northumbria", img: "/images/drakkar.jpg", desc: "El Gran Ejército Pagano desembarca en Inglaterra." },
-  { id: 4, name: "Puertas de Helheim", img: "/images/yggdrasil.jpg", desc: "Los draugr abandonan sus túmulos." },
-  { id: 5, name: "El Crepúsculo: Ragnarök", img: "/images/valhalla.jpg", desc: "La batalla final en la llanura de Vígríðr." },
+  { id: 4, name: "Puertas de Helheim", img: "/images/bf-helheim.jpg", desc: "Los draugr abandonan sus túmulos." },
+  { id: 5, name: "El Crepúsculo: Ragnarök", img: "/images/bf-ragnarok.jpg", desc: "La batalla final en la llanura de Vígríðr." },
+  { id: 6, name: "Jötunheim: El pacto de escarcha", img: "/images/bf-forest.jpg", desc: "Cruza el paso de los gigantes y descubre quién está quebrando la tregua del invierno." },
+  { id: 7, name: "Svartálfaheim: La forja perdida", img: "/images/bf-helheim.jpg", desc: "Desciende a Nidavellir: una conspiración amenaza con apagar las forjas de los enanos." },
+  { id: 8, name: "Vanaheim: La raíz del alba", img: "/images/valhalla.jpg", desc: "Sana el bosque de los Vanir antes de que una sombra antigua alcance Yggdrasil." },
 ];
 export const STAGES_PER_CHAPTER = 8;
 export const TOTAL_STAGES = CHAPTERS.length * STAGES_PER_CHAPTER;
@@ -738,7 +741,43 @@ const ENEMY_POOLS: string[][] = [
   ["harald", "rollo", "uhtred", "leif", "ubbe"],
   ["hel", "fenrir", "sigurd", "hvitserk", "floki"],
   ["loki", "fenrir", "hel", "heimdall", "brynhildr"],
+  ["fenrir", "hel", "bjorn", "sigurd", "hvitserk"],
+  ["loki", "floki", "heimdall", "balder", "ivar"],
+  ["hel", "loki", "fenrir", "balder", "brynhildr"],
 ];
+
+const CAMPAIGN_STORIES: Record<number, { title: string; story: string }[]> = {
+  6: [
+    { title: "El sendero del glaciar", story: "Una señal de humo rompe la calma del paso. Lagertha encuentra un estandarte marcado con una runa que nadie reconoce." },
+    { title: "La aldea sepultada", story: "Bajo la nieve, los supervivientes hablan de pasos enormes y de una voz que promete devolver el invierno eterno." },
+    { title: "Huellas del jotun", story: "Ragnar sigue las huellas hasta un círculo de piedras. Alguien ha despertado a los guardianes del valle." },
+    { title: "La cueva de los ecos", story: "Los ecos repiten los nombres del grupo. Una trampa de ilusión separa a los héroes en la oscuridad." },
+    { title: "El puente de hielo negro", story: "El puente se quiebra bajo el peso del enemigo. Hay que abrirse paso antes de que el deshielo los arrastre." },
+    { title: "Las runas quebradas", story: "Las runas revelan que el pacto entre humanos y gigantes fue saboteado desde dentro." },
+    { title: "El juramento de la giganta", story: "Una guardiana ofrece detener la tormenta si el grupo recupera la piedra robada de su clan." },
+    { title: "El rey bajo la montaña", story: "El rey jotun aguarda en la sala de hielo. Derrotarlo no bastará: los héroes deberán elegir si renuevan la tregua." },
+  ],
+  7: [
+    { title: "El taller sin fuego", story: "La entrada a Nidavellir está fría. Los martillos callaron y un aprendiz pide ayuda desde las galerías." },
+    { title: "La ciudad de los elfos oscuros", story: "Los callejones cambian de forma. Una facción acusa a los enanos de ocultar el corazón de la forja." },
+    { title: "Las galerías de Nidavellir", story: "Viejas vías mineras llevan al grupo bajo la montaña, perseguidos por centinelas de metal." },
+    { title: "El mapa de los nueve metales", story: "Un mapa grabado en una armadura señala tres sellos. Cada uno protege una parte de la forja." },
+    { title: "La forja de las voces", story: "El fuego mágico susurra recuerdos de sus dueños. Ragnar oye una advertencia sobre una traición inminente." },
+    { title: "Sabotaje en las sombras", story: "Las pistas conducen a un antiguo aliado. La batalla revela que Loki busca moldear un arma para romper los reinos." },
+    { title: "El corazón de la forja", story: "Lagertha mantiene la cámara mientras los artesanos reavivan el núcleo rúnico bajo una lluvia de chispas." },
+    { title: "El guardián de hierro", story: "Un coloso despierta para proteger el arma inconclusa. Hay que vencerlo sin destruir el taller que sostiene la montaña." },
+  ],
+  8: [
+    { title: "El puerto de las hojas", story: "La expedición llega a Vanaheim, donde las hojas caen hacia el cielo y las barcas navegan entre raíces luminosas." },
+    { title: "El río de las luces", story: "Espíritus extraviados bloquean el paso. Freya encuentra el rastro de una corrupción que avanza bajo el agua." },
+    { title: "El consejo de Vanir", story: "Los clanes discrepan sobre cerrar el reino. Los héroes deben ganarse su confianza protegiendo el consejo." },
+    { title: "Las raíces enfermas", story: "Una infección oscura trepa hacia Yggdrasil. El grupo sigue las raíces hasta un santuario olvidado." },
+    { title: "La cacería de las sombras", story: "Cazadores invisibles atacan entre los árboles. Lagertha descubre que responden a una runa robada." },
+    { title: "El árbol que recuerda", story: "Una memoria viva muestra el origen de la sombra: fue sellada para proteger a los nueve mundos, no para gobernarlos." },
+    { title: "La última flor", story: "La cura crece en un claro custodiado por criaturas corrompidas. El grupo abre paso sin dañar el bosque." },
+    { title: "La raíz del alba", story: "El guardián final protege el brote de luz. Al vencer, Ragnar y Lagertha restauran la alianza entre Vanir y Æsir." },
+  ],
+};
 
 export function stageInfo(stageId: number) {
   const chapterIdx = Math.floor((stageId - 1) / STAGES_PER_CHAPTER);
@@ -749,10 +788,13 @@ export function stageInfo(stageId: number) {
   const enemies = Array.from({ length: isBoss ? 5 : 3 + (within % 3) }, (_, i) => pool[(i + within) % pool.length]);
   const enemyLevel = 1 + Math.floor((stageId - 1) * 1.15);
   const scale = (isBoss ? 1.18 : 1) * (0.82 + stageId * 0.028);
+  const storyBeat = CAMPAIGN_STORIES[chapterIdx]?.[within];
   return {
     stageId,
     chapter,
     within: within + 1,
+    stageName: storyBeat?.title ?? `${chapter.name} · Etapa ${within + 1}`,
+    story: storyBeat?.story ?? chapter.desc,
     isBoss,
     enemies,
     enemyLevel,

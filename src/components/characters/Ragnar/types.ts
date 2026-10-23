@@ -11,6 +11,8 @@ export const RAGNAR_STATES = [
   "walk",
   "run",
   "attack",
+  "attack2",
+  "attack3",
   "hit",
   "death",
   "victory",
