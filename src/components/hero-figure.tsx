@@ -126,6 +126,8 @@ export function HeroFigure({
             animation={LAGERTHA_ANIMATION_MAP[state]}
             assetBaseUrl="/characters/lagertha-poses"
             battleSpeed={battleSpeed}
+            x={size * 0.8}
+            y={size * 1.12}
             characterHeight={size * 1.12}
             onAnimationEvent={lagerthaEvent}
           />
