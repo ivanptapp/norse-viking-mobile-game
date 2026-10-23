@@ -35,7 +35,12 @@ function runeBonus(heroRunes: string[]) {
   return { hp, atk, def, crit, spd };
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: "PostgreSQL no está configurado" }, { status: 503 });
+  }
   const url = new URL(req.url);
   if (url.searchParams.get("leaderboard") === "1") {
     const rows = await db.select({ id: players.id, nickname: players.nickname, level: players.level, arenaPoints: players.arenaPoints, campaignStage: players.campaignStage, towerFloor: players.towerFloor, jormungandrScore: players.jormungandrScore })
@@ -50,6 +55,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: "PostgreSQL no está configurado; la batalla de prueba está disponible sin cuenta." }, { status: 503 });
+  }
   const body = await req.json();
   const { action } = body;
 

@@ -4,8 +4,8 @@ import React from "react";
 import { FenrirCharacter, type FenrirState } from "./characters/Fenrir";
 import { RagnarCharacter } from "./characters/Ragnar";
 import type { RagnarState } from "./characters/Ragnar/types";
-import LagerthaCharacter from "./characters/Lagertha";
-import type { LagerthaState } from "./characters/Lagertha/types";
+import { LagerthaPosePlate } from "./characters/Lagertha/PosePlate";
+import type { LagerthaAnimation, LagerthaAnimationEvent, LagerthaCharacterHandle } from "./characters/Lagertha/PosePlate/lagertha.types";
 
 export type FigureState =
   | "idle"
@@ -29,17 +29,6 @@ const RAGNAR_STATE_MAP: Record<FigureState, RagnarState> = {
   victory: "victory",
 };
 
-const LAGERTHA_STATE_MAP: Record<FigureState, LagerthaState> = {
-  idle: "idle",
-  walk: "walk",
-  attack: "attack",
-  hit: "hit",
-  dead: "death",
-  cast: "victory",
-  shoot: "attack",
-  victory: "victory",
-};
-
 /** Battle figure states → the full Fenrir animation set. */
 const FENRIR_STATE_MAP: Record<FigureState, FenrirState> = {
   idle: "idle",
@@ -52,11 +41,26 @@ const FENRIR_STATE_MAP: Record<FigureState, FenrirState> = {
   victory: "howl",
 };
 
+const LAGERTHA_ANIMATION_MAP: Record<FigureState, LagerthaAnimation> = {
+  idle: "idle",
+  walk: "move",
+  attack: "attack",
+  hit: "hit",
+  dead: "defeat",
+  cast: "ultimate",
+  shoot: "attack",
+  victory: "victory",
+};
+
 type HeroFigureProps = {
   heroId: string;
   size?: number;
   state?: FigureState;
   delay?: number;
+  battleUnitId?: string;
+  battleSpeed?: number;
+  onLagerthaHandle?: (unitId: string, handle: LagerthaCharacterHandle | null) => void;
+  onLagerthaEvent?: (unitId: string, event: LagerthaAnimationEvent) => void;
 };
 
 const HERO_IMAGES: Record<string, string> = {
@@ -70,11 +74,21 @@ export function HeroFigure({
   size = 210,
   state = "idle",
   delay = 0,
+  battleUnitId,
+  battleSpeed = 1,
+  onLagerthaHandle,
+  onLagerthaEvent,
 }: HeroFigureProps) {
   const id = heroId.toLowerCase();
   const isRagnar = id === "ragnar";
   const isFenrir = id === "fenrir";
   const isLagertha = id === "lagertha";
+  const lagerthaHandleRef = React.useCallback((handle: LagerthaCharacterHandle | null) => {
+    if (battleUnitId) onLagerthaHandle?.(battleUnitId, handle);
+  }, [battleUnitId, onLagerthaHandle]);
+  const lagerthaEvent = React.useCallback((event: LagerthaAnimationEvent) => {
+    if (battleUnitId) onLagerthaEvent?.(battleUnitId, event);
+  }, [battleUnitId, onLagerthaEvent]);
 
   const imageSrc = isRagnar
     ? "/heroes/figure_ragnar_base.png"
@@ -107,7 +121,14 @@ export function HeroFigure({
         </div>
       ) : isLagertha ? (
         <div className="hero-figure__lagertha">
-          <LagerthaCharacter state={LAGERTHA_STATE_MAP[state]} />
+          <LagerthaPosePlate
+            ref={lagerthaHandleRef}
+            animation={LAGERTHA_ANIMATION_MAP[state]}
+            assetBaseUrl="/characters/lagertha-poses"
+            battleSpeed={battleSpeed}
+            characterHeight={size * 1.12}
+            onAnimationEvent={lagerthaEvent}
+          />
         </div>
       ) : (
         <img
@@ -230,7 +251,7 @@ export function HeroFigure({
           pointer-events: none;
         }
 
-        .hero-figure__lagertha svg {
+        .hero-figure__lagertha canvas {
           display: block;
           width: 100%;
           height: 100%;

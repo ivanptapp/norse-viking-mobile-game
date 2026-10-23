@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { HERO_AVATARS } from "./game-ui";
 import { HeroFigure, type FigureState } from "./hero-figure";
+import type { LagerthaAnimation, LagerthaAnimationEvent, LagerthaCharacterHandle, LagerthaAnimationEventName } from "./characters/Lagertha/PosePlate/lagertha.types";
+import { createLagerthaBattleAdapter } from "./characters/Lagertha/PosePlate/lagerthaBattleAdapter";
 import { heroById, RARITY_COLOR } from "@/lib/heroes";
 import { ELEMENT_COLOR, isRanged } from "@/lib/sprites";
 import { isMuted, setMuted, sfx, type SfxName } from "@/lib/sfx";
@@ -106,6 +108,11 @@ interface UnitMetric {
   depth: number;
 }
 
+interface PendingLagerthaEvent {
+  timeout: number;
+  resolve: (event: LagerthaAnimationEvent | null) => void;
+}
+
 interface UnitView {
   hp: number;
   energy: number;
@@ -139,6 +146,19 @@ const DOCK_HEIGHT = 128;
 /** Duración de la presentación de una definitiva dibujada. */
 const CUTIN_MS = 1150;
 const POS_ORDER: Record<string, number> = { front: 0, mid: 1, back: 2 };
+
+function lagerthaAnimationFor(state: FigureState): LagerthaAnimation {
+  switch (state) {
+    case "walk": return "move";
+    case "dead": return "defeat";
+    case "cast": return "ultimate";
+    case "victory": return "victory";
+    case "attack":
+    case "shoot": return "attack";
+    case "hit": return "hit";
+    default: return "idle";
+  }
+}
 
 /** Multiplicador de caja por héroe dibujado con su propio encuadre. */
 function artScaleOf(heroId: string): number {
@@ -247,9 +267,71 @@ export function BattleOverlay({
     return m;
   });
   const unitsRef = useRef(units);
+  const lagerthaAdapterRefsRef = useRef(new Map<string, { current: LagerthaCharacterHandle | null }>());
+  const lagerthaAdaptersRef = useRef(new Map<string, ReturnType<typeof createLagerthaBattleAdapter>>());
+  const lagerthaPlaybackIdsRef = useRef(new Map<string, number>());
+  const lagerthaWaitersRef = useRef(new Map<string, PendingLagerthaEvent>());
+  const deliveredLagerthaEventsRef = useRef(new Set<string>());
+
   useEffect(() => {
     unitsRef.current = units;
   }, [units]);
+
+  const onLagerthaEvent = useCallback((unitId: string, event: LagerthaAnimationEvent) => {
+    const eventKey = `${unitId}:${event.playbackId}:${event.name}`;
+    if (deliveredLagerthaEventsRef.current.has(eventKey)) return;
+    deliveredLagerthaEventsRef.current.add(eventKey);
+    if (deliveredLagerthaEventsRef.current.size > 256) deliveredLagerthaEventsRef.current.clear();
+    const waiter = lagerthaWaitersRef.current.get(eventKey);
+    if (!waiter) return;
+    window.clearTimeout(waiter.timeout);
+    lagerthaWaitersRef.current.delete(eventKey);
+    waiter.resolve(event);
+  }, []);
+
+  const onLagerthaHandle = useCallback((unitId: string, handle: LagerthaCharacterHandle | null) => {
+    let characterRef = lagerthaAdapterRefsRef.current.get(unitId);
+    if (!characterRef) {
+      characterRef = { current: null };
+      lagerthaAdapterRefsRef.current.set(unitId, characterRef);
+      lagerthaAdaptersRef.current.set(unitId, createLagerthaBattleAdapter(characterRef, {
+        onAnimationEvent: (event) => onLagerthaEvent(unitId, event),
+      }));
+    }
+    characterRef.current = handle;
+    if (!handle) {
+      lagerthaPlaybackIdsRef.current.delete(unitId);
+      return;
+    }
+    const unit = unitsRef.current[unitId];
+    const adapter = lagerthaAdaptersRef.current.get(unitId);
+    const playbackId = unit && adapter?.play(unit.dead ? "defeat" : lagerthaAnimationFor(unit.anim), { restart: true });
+    if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(unitId, playbackId);
+  }, [onLagerthaEvent]);
+
+  const onLagerthaFigureEvent = useCallback((unitId: string, event: LagerthaAnimationEvent) => {
+    lagerthaAdaptersRef.current.get(unitId)?.handleAnimationEvent(event);
+  }, []);
+
+  const waitForLagerthaEvent = useCallback((unitId: string, playbackId: number, eventName: LagerthaAnimationEventName, fallbackMs: number) => {
+    const eventKey = `${unitId}:${playbackId}:${eventName}`;
+    if (deliveredLagerthaEventsRef.current.has(eventKey)) return Promise.resolve(null);
+    return new Promise<LagerthaAnimationEvent | null>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        lagerthaWaitersRef.current.delete(eventKey);
+        resolve(null);
+      }, fallbackMs / Math.max(0.25, speedRef.current));
+      lagerthaWaitersRef.current.set(eventKey, { timeout, resolve });
+    });
+  }, []);
+
+  const clearLagerthaEventWaiters = useCallback(() => {
+    lagerthaWaitersRef.current.forEach((waiter) => {
+      window.clearTimeout(waiter.timeout);
+      waiter.resolve(null);
+    });
+    lagerthaWaitersRef.current.clear();
+  }, []);
 
   const [fx, setFx] = useState<Fx[]>([]);
   const [cutin, setCutin] = useState<{ uid: string; name: string } | null>(
@@ -266,6 +348,8 @@ export function BattleOverlay({
   );
   const [slowMo, setSlowMo] = useState(false);
 
+  // Hydrate persisted audio preference after mount to avoid an SSR mismatch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMutedState(isMuted()), []);
   useLayoutEffect(() => {
     const el = fieldRef.current;
@@ -331,11 +415,20 @@ export function BattleOverlay({
 
   const patch = useCallback((p: Record<string, Partial<UnitView>>) => {
     const next = { ...unitsRef.current };
-    for (const k of Object.keys(p))
+    for (const k of Object.keys(p)) {
       next[k] = { ...next[k], ...p[k] } as UnitView;
+      if (p[k].anim !== undefined && byUid[k]?.heroId.toLowerCase() === "lagertha") {
+        const adapter = lagerthaAdaptersRef.current.get(k);
+        if (adapter) {
+          const animation = next[k].dead ? "defeat" : lagerthaAnimationFor(next[k].anim);
+          const playbackId = adapter.play(animation, { restart: true });
+          if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(k, playbackId);
+        }
+      }
+    }
     unitsRef.current = next;
     setUnits(next);
-  }, []);
+  }, [byUid]);
 
   const addFx = useCallback((item: Omit<Fx, "id">, ttl = 900) => {
     const id = ++fxId.current;
@@ -594,6 +687,7 @@ export function BattleOverlay({
         setLog(s.log);
 
         const def = heroById(byUid[s.actor].heroId);
+        const isLagertha = byUid[s.actor].heroId.toLowerCase() === "lagertha";
         const m = metric(s.actor);
         const sig = signatureFor(byUid[s.actor].heroId);
         const heal = s.heals.length > 0;
@@ -627,7 +721,19 @@ export function BattleOverlay({
             760,
           );
 
-          if (isRagnar) {
+          if (isLagertha) {
+            // The authored impact cue is authoritative for this pre-resolved step.
+            patch({ [s.actor]: { anim: "cast" } });
+            const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
+            await waitForLagerthaEvent(s.actor, playbackId, "impact", 2605);
+            if (cancelRef.current || !alive) return;
+            impact(s);
+            await waitForLagerthaEvent(s.actor, playbackId, "ultimateFinished", 1800);
+            if (cancelRef.current || !alive) return;
+            if (!unitsRef.current[s.actor]?.dead) patch({ [s.actor]: { anim: "idle" } });
+            await sleep(130);
+            continue;
+          } else if (isRagnar) {
             setCutin(null);
             setUltimateVideo({
               src: "/videos/ultimates/ragnar-ultimate.mp4",
@@ -663,6 +769,7 @@ export function BattleOverlay({
           patch({ [s.actor]: { anim: "idle" } });
         } else if (sig.approach === "stand" || isRanged(def)) {
           patch({ [s.actor]: { anim: "shoot" } });
+          const lagerthaPlaybackId = isLagertha ? (lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1) : -1;
           await sleep(sig.style === "volley" ? 130 : 190);
 
           sfx(sig.sound === "hit" ? "shoot" : sig.sound);
@@ -694,7 +801,12 @@ export function BattleOverlay({
               },
               380,
             );
-            await sleep(160);
+            if (isLagertha) {
+              await waitForLagerthaEvent(s.actor, lagerthaPlaybackId, "impact", 930);
+            } else {
+              await sleep(160);
+            }
+            if (cancelRef.current || !alive) return;
             impact(s);
           } else {
             const targets = s.targets.length ? s.targets : [s.actor];
@@ -719,10 +831,19 @@ export function BattleOverlay({
               );
             }
 
-            await sleep(sig.style === "volley" ? 280 : 330);
+            if (isLagertha) {
+              await waitForLagerthaEvent(s.actor, lagerthaPlaybackId, "impact", 930);
+            } else {
+              await sleep(sig.style === "volley" ? 280 : 330);
+            }
+            if (cancelRef.current || !alive) return;
             impact(s);
           }
-          await sleep(380);
+          if (isLagertha) {
+            await waitForLagerthaEvent(s.actor, lagerthaPlaybackId, "animationFinished", 1380);
+          } else {
+            await sleep(380);
+          }
 
           patch({ [s.actor]: { anim: "idle" } });
         } else {
@@ -761,12 +882,22 @@ export function BattleOverlay({
           if (cancelRef.current || !alive) return;
 
           patch({ [s.actor]: { anim: "attack" } });
-          await sleep(sig.windup);
+          if (isLagertha) {
+            const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
+            await waitForLagerthaEvent(s.actor, playbackId, "impact", 930);
+          } else {
+            await sleep(sig.windup);
+          }
 
           if (cancelRef.current || !alive) return;
 
           impact(s);
-          await sleep(320);
+          if (isLagertha) {
+            const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
+            await waitForLagerthaEvent(s.actor, playbackId, "animationFinished", 1380);
+          } else {
+            await sleep(320);
+          }
 
           if (cancelRef.current || !alive) return;
 
@@ -800,6 +931,15 @@ export function BattleOverlay({
 
       setActiveUid(null);
       await sleep(500);
+      const finalAnimations: Record<string, Partial<UnitView>> = {};
+      const winningSide = battle.victory ? "ally" : "enemy";
+      for (const fighter of all) {
+        const unit = unitsRef.current[fighter.uid];
+        if (unit && fighter.heroId.toLowerCase() === "lagertha") {
+          finalAnimations[fighter.uid] = { anim: unit.dead ? "dead" : fighter.side === winningSide ? "victory" : "idle" };
+        }
+      }
+      patch(finalAnimations);
       setFinished(true);
       sfx(battle.victory ? "win" : "lose");
     };
@@ -809,6 +949,7 @@ export function BattleOverlay({
     return () => {
       alive = false;
       cancelRef.current = true;
+      clearLagerthaEventWaiters();
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -840,6 +981,14 @@ export function BattleOverlay({
         (h) => (p[h.uid] = { ...p[h.uid], hp: h.hpAfter } as Partial<UnitView>),
       );
     });
+    const winningSide = battle.victory ? "ally" : "enemy";
+    for (const fighter of all) {
+      if (fighter.heroId.toLowerCase() === "lagertha") {
+        const current = { ...unitsRef.current[fighter.uid], ...(p[fighter.uid] ?? {}) } as UnitView;
+        p[fighter.uid] = { ...p[fighter.uid], anim: current.dead ? "dead" : fighter.side === winningSide ? "victory" : "idle" };
+      }
+    }
+    clearLagerthaEventWaiters();
     patch(p);
     setFx([]);
     setCutin(null);
@@ -1122,6 +1271,10 @@ export function BattleOverlay({
                         heroId={f.heroId}
                         size={mt.base * artScaleOf(f.heroId)}
                         state={u.dead ? "dead" : u.anim}
+                        battleUnitId={f.uid}
+                        battleSpeed={speed}
+                        onLagerthaHandle={onLagerthaHandle}
+                        onLagerthaEvent={onLagerthaFigureEvent}
                         delay={
                           ((parseInt(f.uid.slice(1), 10) || 0) * 0.43 +
                             (flip ? 0.22 : 0)) %
