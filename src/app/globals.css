@@ -1,0 +1,314 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;600;700;800&family=Noto+Sans+Runic&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cinzel", "Noto Sans Runic", serif;
+  --font-body: "Inter", "Noto Sans Runic", sans-serif;
+}
+
+html, body { background: #070a09; }
+body { font-family: var(--font-body); }
+.font-display { font-family: var(--font-display); }
+.font-rune { font-family: "Noto Sans Runic", "Cinzel", serif; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.rune-border { border: 1px solid rgba(201,162,39,.35); box-shadow: inset 0 0 0 1px rgba(0,0,0,.6), 0 2px 10px rgba(0,0,0,.45); }
+.stone { background-color: #151d19; background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 14px 14px; }
+.wood { background-color: #241a12; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 26px); }
+
+@keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} } .floaty{animation:floaty 3.2s ease-in-out infinite}
+@keyframes glowPulse { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} 50%{box-shadow:0 0 26px 2px rgba(245,158,11,.55)} } .glow-gold{animation:glowPulse 2s ease-in-out infinite}
+@keyframes cardReveal { 0%{opacity:0;transform:rotateY(90deg) scale(.7)} 100%{opacity:1;transform:rotateY(0) scale(1)} } .card-reveal{animation:cardReveal .55s ease both}
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} } .shimmer{background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);background-size:200% 100%;animation:shimmer 2s linear infinite}
+
+/* ================= HERO FIGURES (realistas) ================= */
+:root{ --spd:1 }
+.hf-body{ animation: hfIdle 2.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes hfIdle { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-4px) rotate(.4deg)} }
+.hf-walk .hf-body{ animation: hfWalk .55s ease-in-out infinite; }
+@keyframes hfWalk { 0%,100%{transform:translateY(0) rotate(-1.2deg)} 50%{transform:translateY(-6px) rotate(1.2deg)} }
+.hf-attack .hf-arm{ animation: hfAttack calc(.45s/var(--spd)) cubic-bezier(.3,.1,.2,1) both; }
+@keyframes hfAttack { 0%{transform:rotate(-25deg)} 40%{transform:rotate(105deg) scale(1.05)} 65%{transform:rotate(80deg)} 100%{transform:rotate(0)} }
+.hf-shoot .hf-arm{ animation: hfShoot calc(.45s/var(--spd)) ease-out both; }
+@keyframes hfShoot { 0%{transform:rotate(0)} 45%{transform:translate(-8px,2px) rotate(-16deg)} 100%{transform:rotate(0)} }
+.hf-cast .hf-arm{ animation: hfCast calc(.8s/var(--spd)) ease-in-out both; }
+@keyframes hfCast { 0%{transform:rotate(0)} 45%{transform:rotate(-42deg) translateY(-6px)} 100%{transform:rotate(0)} }
+.hf-cast .hf-orb, .hf-shoot .hf-orb{ animation: hfOrb calc(.5s/var(--spd)) ease-in-out 2; }
+@keyframes hfOrb { 0%,100%{opacity:.3; transform:scale(.9)} 50%{opacity:1; transform:scale(1.15)} }
+.hf-hit{ animation: hfHit calc(.38s/var(--spd)) ease both; }
+@keyframes hfHit { 0%{filter:brightness(3) saturate(0); transform:translateX(-5px)} 30%{filter:brightness(2); transform:translateX(5px)} 70%{transform:translateX(-2px)} 100%{filter:none; transform:none} }
+.hf-dead{ animation: hfDie calc(.7s/var(--spd)) ease-in forwards; }
+@keyframes hfDie { to{ transform:rotate(-88deg) translateX(-10px); opacity:.25; filter:grayscale(1) brightness(.6) } }
+
+/* ================= BATTLE FX ================= */
+@keyframes fxFly { from{transform:translate(0,0) rotate(var(--rot))} to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot))} } .fx-proj{animation:fxFly var(--dur) linear forwards}
+@keyframes fxBurst { 0%{transform:translate(-50%,-50%) scale(.15); opacity:1} 40%{opacity:1} 100%{transform:translate(-50%,-50%) scale(1.6); opacity:0} } .fx-burst{animation:fxBurst calc(.45s/var(--spd)) ease-out forwards}
+@keyframes fxRing { 0%{transform:translate(-50%,-50%) scale(.3); opacity:.9} 100%{transform:translate(-50%,-50%) scale(1.4); opacity:0} } .fx-ring{animation:fxRing calc(.5s/var(--spd)) ease-out forwards}
+@keyframes fxFloat { 0%{opacity:0; transform:translate(-50%,12px) scale(.5)} 12%{opacity:1; transform:translate(-50%,0) scale(1.25)} 30%{transform:translate(-50%,-6px) scale(1)} 100%{opacity:0; transform:translate(-50%,-52px) scale(.9)} } .fx-float{animation:fxFloat calc(1s/var(--spd)) ease-out forwards}
+@keyframes fxHeal { 0%{opacity:0; transform:translateY(8px) scale(.6)} 25%{opacity:1} 100%{opacity:0; transform:translateY(-50px) scale(1.2)} } .fx-heal{animation:fxHeal calc(1s/var(--spd)) ease-out forwards}
+@keyframes fxSlash { 0%{stroke-dashoffset:80; opacity:1} 100%{stroke-dashoffset:0; opacity:0} } .fx-slash{animation:fxSlash calc(.32s/var(--spd)) ease-out forwards}
+@keyframes fxBolt { 0%{opacity:0} 10%{opacity:1} 25%{opacity:.3} 40%{opacity:1} 70%{opacity:.4} 100%{opacity:0} } .fx-bolt{animation:fxBolt calc(.55s/var(--spd)) ease-out forwards}
+@keyframes fxFlash { 0%{opacity:1} 100%{opacity:0} } .fx-flash{animation:fxFlash calc(.45s/var(--spd)) ease-out forwards}
+@keyframes fieldShake { 0%,100%{transform:translate(0,0)} 18%{transform:translate(-8px,5px)} 36%{transform:translate(8px,-5px)} 54%{transform:translate(-5px,3px)} 72%{transform:translate(5px,-3px)} } .field-shake{animation:fieldShake calc(.45s/var(--spd)) ease}
+.fx-cutin-band{will-change:transform}
+@keyframes cutinInL { 0%{transform:translateX(-110%); opacity:0} 18%{transform:translateX(0); opacity:1} 82%{transform:translateX(0); opacity:1} 100%{transform:translateX(14%); opacity:0} }
+@keyframes cutinInR { 0%{transform:translateX(110%); opacity:0} 18%{transform:translateX(0); opacity:1} 82%{transform:translateX(0); opacity:1} 100%{transform:translateX(-14%); opacity:0} }
+.fx-cutin-l{animation:cutinInL calc(1.05s/var(--spd)) cubic-bezier(.2,.8,.2,1) both} .fx-cutin-r{animation:cutinInR calc(1.05s/var(--spd)) cubic-bezier(.2,.8,.2,1) both}
+@keyframes fxIntro { 0%{transform:scale(2.6) rotate(-4deg); opacity:0} 28%{transform:scale(1) rotate(0); opacity:1} 72%{transform:scale(1.04); opacity:1} 100%{transform:scale(1.35); opacity:0} } .fx-intro{animation:fxIntro calc(.95s/var(--spd)) ease both}
+@keyframes portraitUlt { 0%{box-shadow:0 0 0 0 rgba(251,191,36,.95)} 100%{box-shadow:0 0 0 18px rgba(251,191,36,0)} } .portrait-ult{animation:portraitUlt .85s ease-out 2}
+@keyframes energyPulse { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.4) drop-shadow(0 0 6px #fbbf24)} } .energy-full{animation:energyPulse 1s ease-in-out infinite}
+@keyframes bgDrift { 0%{transform:scale(1.07) translateX(0)} 100%{transform:scale(1.07) translateX(-1.4%)} } .bg-drift{animation:bgDrift 18s ease-in-out infinite alternate}
+@keyframes particles { 0%{transform:translateY(-10px) translateX(0); opacity:0} 10%{opacity:.6} 90%{opacity:.6} 100%{transform:translateY(110%) translateX(16px); opacity:0} }
+.particle{position:absolute; width:3px; height:3px; background:#fff; border-radius:999px; opacity:.6; animation:particles linear infinite}
+@keyframes ember { 0%{transform:translateY(0) scale(.6); opacity:0} 15%{opacity:.9} 100%{transform:translateY(-70px) translateX(12px) scale(1.2); opacity:0} }
+.ember{position:absolute; width:4px; height:4px; background:radial-gradient(circle,#fef3c7,#f97316); border-radius:999px; animation:ember linear infinite}
+
+/* ================= ESCENA ================= */
+.battle-contact-shadow{position:absolute; left:0; top:0; transform:translate(-50%,-50%); border-radius:50%; filter:blur(1.5px)}
+.battle-ult-pool{position:absolute; left:0; top:0; transform:translate(-50%,-50%); border-radius:50%; filter:blur(7px); animation:ultPool 2.2s ease-in-out infinite}
+@keyframes ultPool{0%,100%{opacity:.1; transform:translate(-50%,-50%) scale(.9)} 50%{opacity:.32; transform:translate(-50%,-50%) scale(1.08)}}
+.battle-mist{animation:mistDrift 24s ease-in-out infinite alternate}
+.battle-mist-slow{animation:mistDrift 36s ease-in-out infinite alternate-reverse}
+@keyframes mistDrift{0%{transform:translateX(-3%)} 100%{transform:translateX(3%)}}
+.battle-hp-alert{background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent); animation:hpAlert 1.1s ease-in-out infinite}
+@keyframes hpAlert{0%,100%{opacity:.1} 50%{opacity:.55}}
+
+/* ================= CARTAS DE ESCUADRÓN ================= */
+.battle-dock-backdrop{background:linear-gradient(180deg,transparent 0%,rgba(3,5,4,.5) 32%,rgba(3,5,4,.94) 100%)}
+.battle-card{background:#0b0f0d; transition:transform .22s ease, box-shadow .25s ease, filter .25s ease}
+.battle-card--active{transform:translateY(-7px) scale(1.04); box-shadow:0 0 0 2px rgba(251,191,36,.95), 0 10px 20px rgba(0,0,0,.75)}
+.battle-card--ult{animation:cardUlt 1.7s ease-in-out infinite}
+@keyframes cardUlt{0%,100%{box-shadow:0 0 8px 1px rgba(251,191,36,.4)} 50%{box-shadow:0 0 20px 4px rgba(251,191,36,.85)}}
+.battle-card--dead{filter:grayscale(1) brightness(.55)}
+.battle-card-bar{height:4px; border-radius:999px; background:rgba(0,0,0,.78); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.9)}
+.battle-card-bar--energy{height:3px}
+.battle-energy-full{animation:energyPulse 1s ease-in-out infinite}
+.battle-ult-bolt{animation:boltBlink 1s steps(2) infinite}
+@keyframes boltBlink{0%,49%{opacity:1} 50%,100%{opacity:.3}}
+.battle-ult-chip{box-shadow:0 0 8px rgba(251,191,36,.9)}
+
+/* ================= FX NUEVOS ================= */
+.fx-beam{animation:fxBeam calc(.52s/var(--spd)) ease-out forwards}
+@keyframes fxBeam{0%{transform:scaleX(0); opacity:0} 14%{opacity:1} 62%{transform:scaleX(1); opacity:1} 100%{transform:scaleX(1); opacity:0}}
+.fx-shock{animation:fxShock calc(.62s/var(--spd)) ease-out forwards}
+@keyframes fxShock{0%{transform:scale(.22); opacity:.95} 100%{transform:scale(1.55); opacity:0}}
+.fx-arcane{animation:fxArcane calc(.8s/var(--spd)) ease-out forwards}
+@keyframes fxArcane{0%{transform:scale(.35) rotate(-30deg); opacity:0} 22%{opacity:1} 100%{transform:scale(1.12) rotate(8deg); opacity:0}}
+.fx-arcane__spin{animation:spin 3.6s linear infinite; border-color:currentColor}
+.fx-arcane__spin-rev{animation:spin 6s linear infinite reverse; border-color:currentColor}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fx-dust{animation:fxDust calc(.72s/var(--spd)) ease-out forwards}
+@keyframes fxDust{0%{transform:translateY(0) scale(.4); opacity:.85} 100%{transform:translateY(-24px) scale(1.6); opacity:0}}
+.fx-spark{animation:fxSpark calc(.44s/var(--spd)) ease-out forwards; transform-origin:left center}
+@keyframes fxSpark{0%{transform:translateX(0) scaleX(.35); opacity:1} 100%{transform:translateX(22px) scaleX(1); opacity:0}}
+.fx-sigil{animation:fxSigil calc(1.05s/var(--spd)) ease-out forwards}
+@keyframes fxSigil{0%{transform:scale(.35) rotate(-18deg); opacity:0} 18%{opacity:.9} 100%{transform:scale(1.28) rotate(6deg); opacity:0}}
+.fx-ult-rays{background:radial-gradient(circle at 50% 50%, var(--ult) 0%, transparent 62%); opacity:.45; animation:ultRays calc(1.1s/var(--spd)) ease-out both}
+@keyframes ultRays{0%{opacity:0; transform:scale(.86)} 18%{opacity:.65} 100%{opacity:0; transform:scale(1.18)}}
+
+/* ================= ORIENTACIÓN ================= */
+@media (orientation: portrait) and (pointer: coarse) {
+  .rotate-banner { display: flex !important; }
+}
+/* Aprovechar toda la pantalla en horizontal en dispositivos táctiles */
+@media (orientation: landscape) and (pointer: coarse) {
+.game-shell {
+width: 100vw !important;
+max-width: none !important;
+height: 100dvh;
+min-height: 100dvh;
+border-left: 0;
+border-right: 0;
+}
+}
+/* Encuadre del escenario en pantallas horizontales */
+@media (orientation: landscape) and (pointer: coarse) {
+  .battle-background {
+    object-position: center 75%;
+  }
+}
+/* Arena en horizontal: cartas más bajas para no comerse el campo */
+@media (orientation: landscape) and (max-height: 520px) {
+  .battle-card { max-width: 72px !important; border-radius: 6px !important; }
+  .battle-dock-backdrop { height: 96px !important; }
+}
+
+/* Ajustes de las pantallas del juego en horizontal */
+@media (orientation: landscape) and (pointer: coarse) {
+  /* Aldea: reducir la altura de la imagen principal */
+  .game-shell .home-hero {
+    height: 30dvh;
+    min-height: 120px;
+  }
+
+  /* Sagas: reducir el espacio exterior y entre bloques */
+  .game-shell .campaign-screen {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .game-shell .campaign-screen h2 {
+    font-size: 14px;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  /* Capítulos: tarjetas menos altas */
+  .game-shell .campaign-screen button.w-40.h-24 {
+    width: 128px;
+    height: 68px;
+  }
+
+  /* Hechos: rectángulos compactos en vez de cuadrados */
+  .game-shell .campaign-stage {
+    aspect-ratio: auto;
+    min-height: 0;
+    height: 58px;
+    border-radius: 10px;
+  }
+
+  .game-shell .campaign-stage > span.text-lg {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .game-shell .campaign-stage svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .game-shell .campaign-stage > span.text-\[8px\] {
+    font-size: 7px;
+    line-height: 1;
+  }
+
+  /* Menú inferior: reducir el botón central */
+  .game-shell nav .grid.grid-cols-5 > button > span:first-child {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+
+  .game-shell nav .grid.grid-cols-5 > button {
+    margin-top: -8px;
+  }
+
+  .game-shell nav .grid.grid-cols-5 > button > span:first-child svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+/* Torre de Yggdrasil compacta en horizontal */
+@media (orientation: landscape) and (pointer: coarse) {
+  .game-shell .tower-card .tower-image {
+    height: 70px;
+  }
+
+  .game-shell .tower-card > div.absolute {
+    padding: 8px;
+  }
+
+  .game-shell .tower-card .font-display {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .game-shell .tower-card p {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .game-shell .tower-card button {
+    margin-top: 5px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+/* Header más compacto en horizontal */
+@media (orientation: landscape) and (pointer: coarse) {
+  .game-shell .game-header {
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+}
+/* Header de una sola línea en móviles horizontales */
+@media (orientation: landscape) and (pointer: coarse) {
+  .game-shell .game-header {
+    padding: 4px 8px;
+  }
+
+  .game-shell .game-header > .header-main {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* Perfil más compacto */
+  .game-shell .header-main > div:first-child {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .game-shell .header-main > div:nth-child(2) {
+    width: 76px;
+    flex-shrink: 1;
+  }
+
+  .game-shell .header-main > div:nth-child(2) > div:first-child {
+    font-size: 10px;
+  }
+
+  .game-shell .header-main > div:nth-child(2) > div:nth-child(2) {
+    font-size: 8px;
+    white-space: nowrap;
+  }
+
+  .game-shell .header-main > div:nth-child(2) > div:last-child {
+    height: 4px;
+  }
+
+  /* Recursos más compactos */
+  .game-shell .header-main > div:nth-child(n + 4) {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  /* Segunda fila pasa a formar parte de la primera */
+  .game-shell .game-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .game-shell .game-header > .header-main {
+    flex: 1 1 auto;
+  }
+
+  .game-shell .game-header > .header-actions {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-top: 0;
+    overflow: hidden;
+    gap: 4px;
+  }
+
+  /* Botones de accesos más pequeños */
+  .game-shell .header-actions > button {
+    padding: 4px 6px;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .game-shell .header-actions > button svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+  }
+
+  .game-shell .header-actions > button span {
+    font-size: 8px;
+    white-space: nowrap;
+  }
+}

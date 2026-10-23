@@ -1,0 +1,98 @@
+{
+  "hero": "bjor",
+  "source": "assets/heroes/all_body_bjor.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 347,
+      "y": 21,
+      "width": 108,
+      "height": 109,
+      "component_area": 6012,
+      "centroid_x": 407.45625415834996,
+      "centroid_y": 84.94693945442448
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 155,
+      "y": 24,
+      "width": 170,
+      "height": 209,
+      "component_area": 21879,
+      "centroid_x": 242.60377530965766,
+      "centroid_y": 135.96745737922208
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 43,
+      "y": 47,
+      "width": 95,
+      "height": 127,
+      "component_area": 5306,
+      "centroid_x": 85.20976253298153,
+      "centroid_y": 111.76535996984546
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 301,
+      "y": 148,
+      "width": 174,
+      "height": 138,
+      "component_area": 5643,
+      "centroid_x": 402.36753499911396,
+      "centroid_y": 213.49370902002482
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 21,
+      "y": 185,
+      "width": 126,
+      "height": 126,
+      "component_area": 11279,
+      "centroid_x": 83.21996630906995,
+      "centroid_y": 247.05984573100451
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 321,
+      "y": 285,
+      "width": 117,
+      "height": 101,
+      "component_area": 6992,
+      "centroid_x": 374.65860983981696,
+      "centroid_y": 333.8399599542334
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 208,
+      "y": 319,
+      "width": 68,
+      "height": 151,
+      "component_area": 6194,
+      "centroid_x": 239.0854052308686,
+      "centroid_y": 395.04020019373587
+    },
+    {
+      "index": 8,
+      "file": "part_008.png",
+      "x": 52,
+      "y": 329,
+      "width": 70,
+      "height": 146,
+      "component_area": 6131,
+      "centroid_x": 86.24106997227206,
+      "centroid_y": 401.1206980916653
+    }
+  ]
+}

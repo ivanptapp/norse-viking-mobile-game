@@ -1,0 +1,164 @@
+{
+  "hero": "erik",
+  "source": "assets/heroes/all_body_erik.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 50,
+      "y": 31,
+      "width": 188,
+      "height": 254,
+      "component_area": 27130,
+      "centroid_x": 145.23475856984888,
+      "centroid_y": 166.85285661629192
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 267,
+      "y": 51,
+      "width": 115,
+      "height": 129,
+      "component_area": 5350,
+      "centroid_x": 324.97046728971964,
+      "centroid_y": 118.10766355140187
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 393,
+      "y": 78,
+      "width": 81,
+      "height": 129,
+      "component_area": 5634,
+      "centroid_x": 434.80937167199147,
+      "centroid_y": 141.83368832090878
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 256,
+      "y": 136,
+      "width": 17,
+      "height": 21,
+      "component_area": 102,
+      "centroid_x": 264.3333333333333,
+      "centroid_y": 146.33333333333334
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 279,
+      "y": 211,
+      "width": 77,
+      "height": 148,
+      "component_area": 3491,
+      "centroid_x": 316.25007161271844,
+      "centroid_y": 263.8524778000573
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 374,
+      "y": 217,
+      "width": 103,
+      "height": 103,
+      "component_area": 7377,
+      "centroid_x": 424.64999322217705,
+      "centroid_y": 267.75410058289276
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 63,
+      "y": 286,
+      "width": 70,
+      "height": 172,
+      "component_area": 6788,
+      "centroid_x": 93.48364761343548,
+      "centroid_y": 368.3718326458456
+    },
+    {
+      "index": 8,
+      "file": "part_008.png",
+      "x": 189,
+      "y": 286,
+      "width": 79,
+      "height": 162,
+      "component_area": 6324,
+      "centroid_x": 223.52561669829223,
+      "centroid_y": 371.7726122707147
+    },
+    {
+      "index": 9,
+      "file": "part_009.png",
+      "x": 360,
+      "y": 289,
+      "width": 17,
+      "height": 22,
+      "component_area": 124,
+      "centroid_x": 367.8709677419355,
+      "centroid_y": 299.19354838709677
+    },
+    {
+      "index": 10,
+      "file": "part_010.png",
+      "x": 310,
+      "y": 310,
+      "width": 17,
+      "height": 22,
+      "component_area": 124,
+      "centroid_x": 317.93548387096774,
+      "centroid_y": 320.4032258064516
+    },
+    {
+      "index": 11,
+      "file": "part_011.png",
+      "x": 355,
+      "y": 331,
+      "width": 122,
+      "height": 152,
+      "component_area": 12918,
+      "centroid_x": 415.5942870413377,
+      "centroid_y": 406.2184548691748
+    },
+    {
+      "index": 12,
+      "file": "part_012.png",
+      "x": 41,
+      "y": 351,
+      "width": 17,
+      "height": 21,
+      "component_area": 107,
+      "centroid_x": 49.467289719626166,
+      "centroid_y": 361.3644859813084
+    },
+    {
+      "index": 13,
+      "file": "part_013.png",
+      "x": 175,
+      "y": 375,
+      "width": 16,
+      "height": 22,
+      "component_area": 104,
+      "centroid_x": 182.875,
+      "centroid_y": 385.4423076923077
+    },
+    {
+      "index": 14,
+      "file": "part_014.png",
+      "x": 339,
+      "y": 398,
+      "width": 17,
+      "height": 21,
+      "component_area": 82,
+      "centroid_x": 346.6219512195122,
+      "centroid_y": 406.1585365853659
+    }
+  ]
+}

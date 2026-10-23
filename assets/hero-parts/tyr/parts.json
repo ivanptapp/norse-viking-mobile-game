@@ -1,0 +1,98 @@
+{
+  "hero": "tyr",
+  "source": "assets/heroes/all_body_tyr.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 175,
+      "y": 6,
+      "width": 144,
+      "height": 191,
+      "component_area": 14391,
+      "centroid_x": 247.24376346327566,
+      "centroid_y": 105.38100201514835
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 36,
+      "y": 15,
+      "width": 118,
+      "height": 162,
+      "component_area": 6324,
+      "centroid_x": 94.7381404174573,
+      "centroid_y": 117.3904174573055
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 338,
+      "y": 116,
+      "width": 114,
+      "height": 72,
+      "component_area": 3272,
+      "centroid_x": 391.0461491442543,
+      "centroid_y": 155.58496332518337
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 42,
+      "y": 195,
+      "width": 103,
+      "height": 235,
+      "component_area": 6643,
+      "centroid_x": 86.44633448743038,
+      "centroid_y": 294.6582869185609
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 179,
+      "y": 204,
+      "width": 58,
+      "height": 148,
+      "component_area": 4508,
+      "centroid_x": 205.1173469387755,
+      "centroid_y": 275.0944986690328
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 263,
+      "y": 204,
+      "width": 72,
+      "height": 146,
+      "component_area": 5176,
+      "centroid_x": 296.96020092735705,
+      "centroid_y": 276.1097372488408
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 355,
+      "y": 204,
+      "width": 117,
+      "height": 103,
+      "component_area": 3519,
+      "centroid_x": 411.3034953111679,
+      "centroid_y": 253.1858482523444
+    },
+    {
+      "index": 8,
+      "file": "part_008.png",
+      "x": 179,
+      "y": 355,
+      "width": 139,
+      "height": 135,
+      "component_area": 12065,
+      "centroid_x": 247.6586821384169,
+      "centroid_y": 423.9670949026109
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "source": "assets/heroes/lagertha_parts.png",
+  "canvas": {
+    "width": 540,
+    "height": 900
+  },
+  "groundY": 860,
+  "rootPivot": [
+    240,
+    860
+  ],
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "x": 66,
+      "y": 198,
+      "width": 341,
+      "height": 399,
+      "pivot": [
+        265,
+        250
+      ],
+      "z": 5
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "x": 85,
+      "y": 73,
+      "width": 230,
+      "height": 182,
+      "pivot": [
+        267,
+        228
+      ],
+      "z": 6
+    },
+    {
+      "name": "arm-sword-upper",
+      "file": "arm-sword-upper.png",
+      "x": 324,
+      "y": 257,
+      "width": 194,
+      "height": 218,
+      "pivot": [
+        340,
+        297
+      ],
+      "z": 7
+    },
+    {
+      "name": "arm-sword-lower",
+      "file": "arm-sword-lower.png",
+      "x": 324,
+      "y": 257,
+      "width": 194,
+      "height": 218,
+      "pivot": [
+        405,
+        361
+      ],
+      "z": 8
+    },
+    {
+      "name": "arm-shield",
+      "file": "arm-shield.png",
+      "x": 39,
+      "y": 271,
+      "width": 159,
+      "height": 187,
+      "pivot": [
+        182,
+        282
+      ],
+      "z": 9
+    },
+    {
+      "name": "leg-far-upper",
+      "file": "leg-far-upper.png",
+      "x": 237,
+      "y": 525,
+      "width": 148,
+      "height": 335,
+      "pivot": [
+        299,
+        548
+      ],
+      "z": 1
+    },
+    {
+      "name": "leg-far-lower",
+      "file": "leg-far-lower.png",
+      "x": 237,
+      "y": 577,
+      "width": 148,
+      "height": 283,
+      "pivot": [
+        331,
+        669
+      ],
+      "z": 2
+    },
+    {
+      "name": "leg-near-upper",
+      "file": "leg-near-upper.png",
+      "x": 74,
+      "y": 547,
+      "width": 176,
+      "height": 313,
+      "pivot": [
+        194,
+        548
+      ],
+      "z": 3
+    },
+    {
+      "name": "leg-near-lower",
+      "file": "leg-near-lower.png",
+      "x": 74,
+      "y": 571,
+      "width": 176,
+      "height": 289,
+      "pivot": [
+        192,
+        678
+      ],
+      "z": 4
+    }
+  ]
+}

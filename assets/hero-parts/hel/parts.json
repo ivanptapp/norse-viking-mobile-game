@@ -1,0 +1,76 @@
+{
+  "hero": "hel",
+  "source": "assets/heroes/all_body_hel.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 90,
+      "y": 4,
+      "width": 99,
+      "height": 244,
+      "component_area": 14657,
+      "centroid_x": 142.08951354301698,
+      "centroid_y": 131.15521593777717
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 277,
+      "y": 15,
+      "width": 214,
+      "height": 338,
+      "component_area": 30926,
+      "centroid_x": 377.60686800750176,
+      "centroid_y": 155.55542262174222
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 8,
+      "y": 118,
+      "width": 74,
+      "height": 177,
+      "component_area": 5675,
+      "centroid_x": 45.85374449339207,
+      "centroid_y": 201.2577973568282
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 197,
+      "y": 122,
+      "width": 79,
+      "height": 165,
+      "component_area": 5821,
+      "centroid_x": 237.095516234324,
+      "centroid_y": 203.72513313863598
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 3,
+      "y": 258,
+      "width": 293,
+      "height": 234,
+      "component_area": 36900,
+      "centroid_x": 152.7328997289973,
+      "centroid_y": 391.06224932249324
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 289,
+      "y": 288,
+      "width": 199,
+      "height": 210,
+      "component_area": 19403,
+      "centroid_x": 379.06699994846156,
+      "centroid_y": 391.7699324846673
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "hero": "rollo",
+  "source": "assets/heroes/all_body_rollo.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 15,
+      "y": 11,
+      "width": 167,
+      "height": 152,
+      "component_area": 12879,
+      "centroid_x": 94.33674974765121,
+      "centroid_y": 70.40624272070814
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 146,
+      "y": 12,
+      "width": 202,
+      "height": 307,
+      "component_area": 30560,
+      "centroid_x": 245.55765706806284,
+      "centroid_y": 183.59162303664922
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 299,
+      "y": 12,
+      "width": 83,
+      "height": 114,
+      "component_area": 5220,
+      "centroid_x": 342.9509578544061,
+      "centroid_y": 64.42911877394636
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 401,
+      "y": 24,
+      "width": 74,
+      "height": 71,
+      "component_area": 2271,
+      "centroid_x": 437.36415675913696,
+      "centroid_y": 59.949801849405546
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 10,
+      "y": 150,
+      "width": 152,
+      "height": 181,
+      "component_area": 10784,
+      "centroid_x": 84.7942321958457,
+      "centroid_y": 250.8339206231454
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 356,
+      "y": 151,
+      "width": 137,
+      "height": 186,
+      "component_area": 13040,
+      "centroid_x": 420.2023773006135,
+      "centroid_y": 251.7881134969325
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 142,
+      "y": 304,
+      "width": 82,
+      "height": 183,
+      "component_area": 8342,
+      "centroid_x": 181.62299208822824,
+      "centroid_y": 394.7089426995924
+    },
+    {
+      "index": 8,
+      "file": "part_008.png",
+      "x": 263,
+      "y": 308,
+      "width": 87,
+      "height": 175,
+      "component_area": 8123,
+      "centroid_x": 304.31306167672045,
+      "centroid_y": 398.059953219254
+    },
+    {
+      "index": 9,
+      "file": "part_009.png",
+      "x": 358,
+      "y": 353,
+      "width": 124,
+      "height": 125,
+      "component_area": 8718,
+      "centroid_x": 419.38426244551505,
+      "centroid_y": 414.9780913053453
+    }
+  ]
+}

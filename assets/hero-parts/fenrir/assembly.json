@@ -1,0 +1,79 @@
+{
+  "hero": "fenrir",
+  "canvas": {
+    "width": 500,
+    "height": 600
+  },
+  "parts": [
+    {
+      "index": 1,
+      "name": "head",
+      "x": 265,
+      "y": 37,
+      "width": 143,
+      "height": 129,
+      "layer": 4,
+      "file": "part_001.png"
+    },
+    {
+      "index": 2,
+      "name": "body",
+      "x": 139,
+      "y": 70,
+      "width": 180,
+      "height": 170,
+      "layer": 3,
+      "file": "part_002.png"
+    },
+    {
+      "index": 3,
+      "name": "front_left_leg",
+      "x": 150,
+      "y": 90,
+      "width": 76,
+      "height": 165,
+      "layer": 4,
+      "file": "part_003.png"
+    },
+    {
+      "index": 4,
+      "name": "front_right_leg",
+      "x": 290,
+      "y": 135,
+      "width": 92,
+      "height": 151,
+      "layer": 2,
+      "file": "part_004.png"
+    },
+    {
+      "index": 5,
+      "name": "hind_left_leg",
+      "x": 125,
+      "y": 190,
+      "width": 78,
+      "height": 169,
+      "layer": 1,
+      "file": "part_005.png"
+    },
+    {
+      "index": 6,
+      "name": "hind_right_leg",
+      "x": 240,
+      "y": 190,
+      "width": 80,
+      "height": 164,
+      "layer": 1,
+      "file": "part_006.png"
+    },
+    {
+      "index": 7,
+      "name": "tail",
+      "x": 40,
+      "y": 220,
+      "width": 125,
+      "height": 96,
+      "layer": 0,
+      "file": "part_007.png"
+    }
+  ]
+}

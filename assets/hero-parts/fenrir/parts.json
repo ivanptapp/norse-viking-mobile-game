@@ -1,0 +1,87 @@
+{
+  "hero": "fenrir",
+  "source": "assets/heroes/all_body_fenrir.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 320,
+      "y": 37,
+      "width": 143,
+      "height": 129,
+      "component_area": 8678,
+      "centroid_x": 393.93650610739803,
+      "centroid_y": 101.0361834524084
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 139,
+      "y": 70,
+      "width": 180,
+      "height": 170,
+      "component_area": 16962,
+      "centroid_x": 236.06673741304093,
+      "centroid_y": 156.3963565617262
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 49,
+      "y": 136,
+      "width": 76,
+      "height": 165,
+      "component_area": 5604,
+      "centroid_x": 86.80121341898644,
+      "centroid_y": 211.4271948608137
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 333,
+      "y": 164,
+      "width": 92,
+      "height": 151,
+      "component_area": 4717,
+      "centroid_x": 370.5442018231927,
+      "centroid_y": 236.61373754504982
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 125,
+      "y": 300,
+      "width": 78,
+      "height": 169,
+      "component_area": 6171,
+      "centroid_x": 163.0683843785448,
+      "centroid_y": 378.19996759034194
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 257,
+      "y": 301,
+      "width": 80,
+      "height": 164,
+      "component_area": 6191,
+      "centroid_x": 293.64319172993055,
+      "centroid_y": 375.73186884186725
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 22,
+      "y": 314,
+      "width": 125,
+      "height": 96,
+      "component_area": 5034,
+      "centroid_x": 87.11978545887962,
+      "centroid_y": 365.36948748510133
+    }
+  ]
+}

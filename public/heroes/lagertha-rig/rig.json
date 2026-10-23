@@ -1,0 +1,86 @@
+{
+  "source": "public/heroes/figure_lagertha.png",
+  "canvasWidth": 432,
+  "canvasHeight": 578,
+  "base": "base.png",
+  "underlay": "underlay.png",
+  "parts": [
+    {
+      "name": "head",
+      "file": "head.png",
+      "x": 123,
+      "y": 46,
+      "width": 198,
+      "height": 170,
+      "pivotX": 292,
+      "pivotY": 194,
+      "depth": "front"
+    },
+    {
+      "name": "arm-upper",
+      "file": "arm-upper.png",
+      "x": 126,
+      "y": 170,
+      "width": 88,
+      "height": 96,
+      "pivotX": 195,
+      "pivotY": 195,
+      "depth": "front"
+    },
+    {
+      "name": "arm-lower",
+      "file": "arm-lower.png",
+      "x": 83,
+      "y": 230,
+      "width": 210,
+      "height": 207,
+      "pivotX": 150,
+      "pivotY": 252,
+      "depth": "front"
+    },
+    {
+      "name": "leg-far-upper",
+      "file": "leg-far-upper.png",
+      "x": 291,
+      "y": 306,
+      "width": 93,
+      "height": 105,
+      "pivotX": 335,
+      "pivotY": 333,
+      "depth": "back"
+    },
+    {
+      "name": "leg-far-lower",
+      "file": "leg-far-lower.png",
+      "x": 297,
+      "y": 378,
+      "width": 95,
+      "height": 177,
+      "pivotX": 335,
+      "pivotY": 392,
+      "depth": "back"
+    },
+    {
+      "name": "leg-near-upper",
+      "file": "leg-near-upper.png",
+      "x": 142,
+      "y": 306,
+      "width": 92,
+      "height": 104,
+      "pivotX": 198,
+      "pivotY": 333,
+      "depth": "back"
+    },
+    {
+      "name": "leg-near-lower",
+      "file": "leg-near-lower.png",
+      "x": 50,
+      "y": 378,
+      "width": 154,
+      "height": 176,
+      "pivotX": 178,
+      "pivotY": 391,
+      "depth": "back"
+    }
+  ]
+}

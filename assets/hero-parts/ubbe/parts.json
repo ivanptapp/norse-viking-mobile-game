@@ -1,0 +1,98 @@
+{
+  "hero": "ubbe",
+  "source": "assets/heroes/all_body_ubbe.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 172,
+      "y": 26,
+      "width": 135,
+      "height": 188,
+      "component_area": 14167,
+      "centroid_x": 241.15860803275217,
+      "centroid_y": 126.96357732759229
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 330,
+      "y": 79,
+      "width": 148,
+      "height": 146,
+      "component_area": 6544,
+      "centroid_x": 386.95232273838633,
+      "centroid_y": 148.06356968215158
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 58,
+      "y": 83,
+      "width": 62,
+      "height": 139,
+      "component_area": 4208,
+      "centroid_x": 89.41920152091255,
+      "centroid_y": 147.9555608365019
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 267,
+      "y": 213,
+      "width": 78,
+      "height": 127,
+      "component_area": 4521,
+      "centroid_x": 302.78411855784117,
+      "centroid_y": 277.995797389958
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 172,
+      "y": 214,
+      "width": 56,
+      "height": 129,
+      "component_area": 4130,
+      "centroid_x": 198.16198547215495,
+      "centroid_y": 276.6009685230024
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 129,
+      "y": 323,
+      "width": 37,
+      "height": 156,
+      "component_area": 2540,
+      "centroid_x": 146.66929133858267,
+      "centroid_y": 403.13503937007874
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 336,
+      "y": 333,
+      "width": 123,
+      "height": 144,
+      "component_area": 12404,
+      "centroid_x": 397.74322799097064,
+      "centroid_y": 404.00983553692356
+    },
+    {
+      "index": 8,
+      "file": "part_008.png",
+      "x": 191,
+      "y": 351,
+      "width": 120,
+      "height": 120,
+      "component_area": 10197,
+      "centroid_x": 250.90742375208396,
+      "centroid_y": 410.9114445425125
+    }
+  ]
+}

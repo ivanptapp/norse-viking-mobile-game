@@ -1,0 +1,87 @@
+{
+  "hero": "harald",
+  "source": "assets/heroes/all_body_harald.png",
+  "canvas_width": 500,
+  "canvas_height": 500,
+  "alpha_threshold": 10,
+  "minimum_area": 20,
+  "parts": [
+    {
+      "index": 1,
+      "file": "part_001.png",
+      "x": 31,
+      "y": 7,
+      "width": 167,
+      "height": 271,
+      "component_area": 22384,
+      "centroid_x": 116.93039671193709,
+      "centroid_y": 153.1777609006433
+    },
+    {
+      "index": 2,
+      "file": "part_002.png",
+      "x": 327,
+      "y": 55,
+      "width": 139,
+      "height": 104,
+      "component_area": 6156,
+      "centroid_x": 387.55506822612085,
+      "centroid_y": 109.6148473034438
+    },
+    {
+      "index": 3,
+      "file": "part_003.png",
+      "x": 226,
+      "y": 122,
+      "width": 116,
+      "height": 207,
+      "component_area": 8204,
+      "centroid_x": 289.29144319843977,
+      "centroid_y": 202.8200877620673
+    },
+    {
+      "index": 4,
+      "file": "part_004.png",
+      "x": 136,
+      "y": 264,
+      "width": 83,
+      "height": 199,
+      "component_area": 7781,
+      "centroid_x": 172.87855031486956,
+      "centroid_y": 366.2925073897957
+    },
+    {
+      "index": 5,
+      "file": "part_005.png",
+      "x": 36,
+      "y": 267,
+      "width": 73,
+      "height": 212,
+      "component_area": 8377,
+      "centroid_x": 68.062552226334,
+      "centroid_y": 364.8017189924794
+    },
+    {
+      "index": 6,
+      "file": "part_006.png",
+      "x": 323,
+      "y": 298,
+      "width": 156,
+      "height": 183,
+      "component_area": 17698,
+      "centroid_x": 406.4766640298339,
+      "centroid_y": 392.3355746412024
+    },
+    {
+      "index": 7,
+      "file": "part_007.png",
+      "x": 238,
+      "y": 342,
+      "width": 95,
+      "height": 129,
+      "component_area": 7424,
+      "centroid_x": 285.2615840517241,
+      "centroid_y": 401.6182650862069
+    }
+  ]
+}
