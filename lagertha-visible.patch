@@ -1,0 +1,13 @@
+diff --git a/src/components/hero-figure.tsx b/src/components/hero-figure.tsx
+index cf1193f..171657b 100644
+--- a/src/components/hero-figure.tsx
++++ b/src/components/hero-figure.tsx
+@@ -126,6 +126,8 @@ export function HeroFigure({
+             animation={LAGERTHA_ANIMATION_MAP[state]}
+             assetBaseUrl="/characters/lagertha-poses"
+             battleSpeed={battleSpeed}
++            x={size * 0.8}
++            y={size * 1.12}
+             characterHeight={size * 1.12}
+             onAnimationEvent={lagerthaEvent}
+           />

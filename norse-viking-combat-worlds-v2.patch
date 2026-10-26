@@ -1,0 +1,854 @@
+diff --git a/src/app/api/game/route.ts b/src/app/api/game/route.ts
+index 8b86a9d..fc547b4 100644
+--- a/src/app/api/game/route.ts
++++ b/src/app/api/game/route.ts
+@@ -236,7 +236,16 @@ export async function POST(req: Request) {
+       // runas -> bonus aplicado a fighters (solo visual, pero potencia real via stats extra)
+       const heroRunes = (player.heroRunes as Record<string, string[]>) || {};
+ 
+-      const CHAPTER_BG = ["/images/bf-coast.jpg", "/images/bf-forest.jpg", "/images/bf-village.jpg", "/images/bf-helheim.jpg", "/images/bf-ragnarok.jpg"];
++      const CHAPTER_BG = [
++        "/images/bf-coast.jpg",
++        "/images/bf-forest.jpg",
++        "/images/bf-village.jpg",
++        "/images/bf-helheim.jpg",
++        "/images/bf-ragnarok.jpg",
++        "/images/bf-forest.jpg",
++        "/images/bf-helheim.jpg",
++        "/images/valhalla.jpg",
++      ];
+       let background = CHAPTER_BG[0];
+       let enemyIds: string[] = [], enemyLevel = 1, scale = 1, rewards: { gold: number; exp: number; gems: number } = { gold: 0, exp: 0, gems: 0 }, stageId: number | null = null, enemyName = "Enemigos";
+ 
+@@ -262,7 +271,7 @@ export async function POST(req: Request) {
+         const info = stageInfo(stageId);
+         enemyIds = info.enemies; enemyLevel = info.enemyLevel; scale = info.scale;
+         rewards = { ...info.rewards };
+-        enemyName = `${info.chapter.name} · Etapa ${info.within}${info.isBoss ? " · JEFE" : ""}`;
++        enemyName = `${info.chapter.name} · ${info.stageName}${info.isBoss ? " · JEFE" : ""}`;
+         background = CHAPTER_BG[info.chapter.id - 1] ?? CHAPTER_BG[0];
+         await db.update(players).set({ energy: player.energy - 6 }).where(eq(players.id, playerId));
+       } else if (mode === "tower") {
+diff --git a/src/app/battle-test/page.tsx b/src/app/battle-test/page.tsx
+index 9b1ddf5..a828371 100644
+--- a/src/app/battle-test/page.tsx
++++ b/src/app/battle-test/page.tsx
+@@ -63,6 +63,10 @@ const SCRIPT: Blueprint[] = [
+     ],
+   },
+   { actor: 13, targets: [4], skill: "Estocada Lunar", kind: "single", amount: 400 },
++  { actor: 0, targets: [3], skill: "Barrido de escudo y hacha", kind: "single", amount: 390 },
++  { actor: 1, targets: [0], skill: "Giro de la doncella", kind: "single", amount: 430 },
++  { actor: 0, targets: [4], skill: "Hachazo del cuervo", kind: "single", amount: 440 },
++  { actor: 1, targets: [2], skill: "Corte de retorno", kind: "single", amount: 450 },
+   {
+     actor: 0,
+     targets: [0, 1, 2],
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 7ace9cf..011eab4 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1081,6 +1081,8 @@ export default function GamePage() {
+                     return (
+                       <button
+                         key={sid}
++                        title={info.stageName}
++                        aria-label={`${info.stageName}${info.isBoss ? ", jefe" : ""}`}
+                         disabled={locked}
+                         onClick={() => setStageSel(sid)}
+                         className={`campaign-stage relative aspect-square rounded-2xl flex flex-col items-center justify-center font-display font-black border-2 ${cleared ? "bg-teal-900/70 border-teal-600 text-teal-200" : isNext ? "bg-amber-500 border-amber-300 text-black glow-gold" : "bg-black/60 border-stone-700 text-stone-500"}`}
+@@ -1824,9 +1826,10 @@ export default function GamePage() {
+                 <h3 className="font-display font-black text-amber-300">
+                   {info.chapter.name}
+                 </h3>
+-                <p className="text-sm text-stone-300">
+-                  Etapa {info.within}
+-                  {info.isBoss ? " · JEFE" : ""} · Nv.{info.enemyLevel}
++                <p className="text-sm font-bold text-stone-100">{info.stageName}</p>
++                <p className="text-xs leading-relaxed text-stone-300">{info.story}</p>
++                <p className="text-[11px] text-stone-400">
++                  Etapa {info.within}{info.isBoss ? " · JEFE" : ""} · Nv.{info.enemyLevel}
+                 </p>
+                 <div className="flex gap-2 justify-center my-3">
+                   {info.enemies.map((id, i) => (
+diff --git a/src/components/battle.tsx b/src/components/battle.tsx
+index 2837759..aec576c 100644
+--- a/src/components/battle.tsx
++++ b/src/components/battle.tsx
+@@ -124,6 +124,8 @@ interface UnitView {
+   shield?: number;
+   /** Duración del desplazamiento en curso (ms a velocidad 1). */
+   moveMs?: number;
++  /** Per-hero attack choreography; damage and targeting remain unchanged. */
++  attackVariant: 0 | 1 | 2;
+ }
+ 
+ /**
+@@ -145,16 +147,22 @@ const LANES = [
+ const DOCK_HEIGHT = 128;
+ /** Duración de la presentación de una definitiva dibujada. */
+ const CUTIN_MS = 1150;
++/** Authored Ragnar clip timings in ms; keep damage and retreat on the visual beat. */
++const RAGNAR_ATTACK_IMPACT_MS = [460, 460, 510] as const;
++const RAGNAR_ATTACK_RECOVERY_MS = [790, 660, 670] as const;
+ const POS_ORDER: Record<string, number> = { front: 0, mid: 1, back: 2 };
+ 
+-function lagerthaAnimationFor(state: FigureState): LagerthaAnimation {
++function lagerthaAnimationFor(state: FigureState, attackVariant = 0): LagerthaAnimation {
+   switch (state) {
+     case "walk": return "move";
+     case "dead": return "defeat";
+     case "cast": return "ultimate";
+     case "victory": return "victory";
+     case "attack":
+-    case "shoot": return "attack";
++    case "shoot": {
++      const variants: LagerthaAnimation[] = ["attack", "attack2", "attack3"];
++      return variants[((attackVariant % 3) + 3) % 3];
++    }
+     case "hit": return "hit";
+     default: return "idle";
+   }
+@@ -262,6 +270,7 @@ export function BattleOverlay({
+           dy: 0,
+           moving: false,
+           dead: false,
++          attackVariant: 0,
+         }),
+     );
+     return m;
+@@ -305,7 +314,7 @@ export function BattleOverlay({
+     }
+     const unit = unitsRef.current[unitId];
+     const adapter = lagerthaAdaptersRef.current.get(unitId);
+-    const playbackId = unit && adapter?.play(unit.dead ? "defeat" : lagerthaAnimationFor(unit.anim), { restart: true });
++    const playbackId = unit && adapter?.play(unit.dead ? "defeat" : lagerthaAnimationFor(unit.anim, unit.attackVariant), { restart: true });
+     if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(unitId, playbackId);
+   }, [onLagerthaEvent]);
+ 
+@@ -420,7 +429,7 @@ export function BattleOverlay({
+       if (p[k].anim !== undefined && byUid[k]?.heroId.toLowerCase() === "lagertha") {
+         const adapter = lagerthaAdaptersRef.current.get(k);
+         if (adapter) {
+-          const animation = next[k].dead ? "defeat" : lagerthaAnimationFor(next[k].anim);
++          const animation = next[k].dead ? "defeat" : lagerthaAnimationFor(next[k].anim, next[k].attackVariant);
+           const playbackId = adapter.play(animation, { restart: true });
+           if (playbackId !== undefined) lagerthaPlaybackIdsRef.current.set(k, playbackId);
+         }
+@@ -677,6 +686,12 @@ export function BattleOverlay({
+       sfx("horn");
+       await sleep(1000);
+       setIntro(false);
++      const attackCycles = new Map<string, number>();
++      const nextAttackVariant = (uid: string): 0 | 1 | 2 => {
++        const next = ((attackCycles.get(uid) ?? -1) + 1) % 3;
++        attackCycles.set(uid, next);
++        return next as 0 | 1 | 2;
++      };
+ 
+       for (let i = 0; i < battle.steps.length; i++) {
+         if (cancelRef.current || !alive) return;
+@@ -687,14 +702,15 @@ export function BattleOverlay({
+         setLog(s.log);
+ 
+         const def = heroById(byUid[s.actor].heroId);
+-        const isLagertha = byUid[s.actor].heroId.toLowerCase() === "lagertha";
++        const actorHeroId = byUid[s.actor].heroId.toLowerCase();
++        const isLagertha = actorHeroId === "lagertha";
++        const isRagnar = actorHeroId === "ragnar";
+         const m = metric(s.actor);
+         const sig = signatureFor(byUid[s.actor].heroId);
+         const heal = s.heals.length > 0;
+ 
+         if (s.ult) {
+           const actor = byUid[s.actor];
+-          const isRagnar = actor.heroId.toLowerCase() === "ragnar";
+ 
+           sfx("ult");
+ 
+@@ -768,7 +784,8 @@ export function BattleOverlay({
+ 
+           patch({ [s.actor]: { anim: "idle" } });
+         } else if (sig.approach === "stand" || isRanged(def)) {
+-          patch({ [s.actor]: { anim: "shoot" } });
++          const attackVariant = isRagnar || isLagertha ? nextAttackVariant(s.actor) : undefined;
++          patch({ [s.actor]: { anim: "shoot", ...(attackVariant !== undefined ? { attackVariant } : {}) } });
+           const lagerthaPlaybackId = isLagertha ? (lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1) : -1;
+           await sleep(sig.style === "volley" ? 130 : 190);
+ 
+@@ -855,9 +872,10 @@ export function BattleOverlay({
+           const dy = 0;
+           const blink = sig.approach === "blink";
+           const moveMs =
+-            byUid[s.actor].heroId.toLowerCase() === "ragnar"
+-              ? 1200
++            isRagnar
++              ? 680
+               : APPROACH_MS[sig.approach] || 600;
++          const attackVariant = isRagnar || isLagertha ? nextAttackVariant(s.actor) : undefined;
+ 
+           if (blink) {
+             addFx({ kind: "spark", x: m.x, y: m.y - m.chest, color: sig.trail }, 320);
+@@ -873,6 +891,7 @@ export function BattleOverlay({
+               moving: true,
+               anim: blink ? "attack" : "walk",
+               moveMs,
++              ...(attackVariant !== undefined ? { attackVariant } : {}),
+             },
+           });
+ 
+@@ -886,7 +905,7 @@ export function BattleOverlay({
+             const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
+             await waitForLagerthaEvent(s.actor, playbackId, "impact", 930);
+           } else {
+-            await sleep(sig.windup);
++            await sleep(isRagnar ? RAGNAR_ATTACK_IMPACT_MS[attackVariant ?? 0] : sig.windup);
+           }
+ 
+           if (cancelRef.current || !alive) return;
+@@ -896,7 +915,7 @@ export function BattleOverlay({
+             const playbackId = lagerthaPlaybackIdsRef.current.get(s.actor) ?? -1;
+             await waitForLagerthaEvent(s.actor, playbackId, "animationFinished", 1380);
+           } else {
+-            await sleep(320);
++            await sleep(isRagnar ? RAGNAR_ATTACK_RECOVERY_MS[attackVariant ?? 0] : 320);
+           }
+ 
+           if (cancelRef.current || !alive) return;
+@@ -1273,6 +1292,7 @@ export function BattleOverlay({
+                         state={u.dead ? "dead" : u.anim}
+                         battleUnitId={f.uid}
+                         battleSpeed={speed}
++                        attackVariant={u.attackVariant}
+                         onLagerthaHandle={onLagerthaHandle}
+                         onLagerthaEvent={onLagerthaFigureEvent}
+                         delay={
+diff --git a/src/components/characters/Lagertha/PosePlate/LagerthaAnimationEngine.ts b/src/components/characters/Lagertha/PosePlate/LagerthaAnimationEngine.ts
+index 0df4621..8e7c53c 100644
+--- a/src/components/characters/Lagertha/PosePlate/LagerthaAnimationEngine.ts
++++ b/src/components/characters/Lagertha/PosePlate/LagerthaAnimationEngine.ts
+@@ -295,7 +295,8 @@ export class LagerthaAnimationEngine {
+   }
+ 
+   private drawEnergy(ctx: CanvasRenderingContext2D, x: number, y: number, h: number, direction: number, time: number, animation: LagerthaAnimation): void {
+-    if (animation !== "ultimate" && animation !== "attack") return;
++    const isAttack = animation === "attack" || animation === "attack2" || animation === "attack3";
++    if (animation !== "ultimate" && !isAttack) return;
+     ctx.save();
+     ctx.translate(x, y);
+     ctx.scale(direction, 1);
+@@ -315,8 +316,8 @@ export class LagerthaAnimationEngine {
+       ctx.stroke();
+     }
+ 
+-    const slashStart = animation === "ultimate" ? 0.68 : 0.16;
+-    const slashEnd = animation === "ultimate" ? 1.2 : 0.56;
++    const slashStart = animation === "ultimate" ? 0.68 : animation === "attack3" ? 0.48 : animation === "attack2" ? 0.38 : 0.16;
++    const slashEnd = animation === "ultimate" ? 1.2 : animation === "attack3" ? 0.82 : animation === "attack2" ? 0.7 : 0.56;
+     if (t >= slashStart && t <= slashEnd) {
+       const u = clamp01((t - slashStart) / (slashEnd - slashStart));
+       const fade = Math.min(1, u * 9, (1 - u) * 5);
+diff --git a/src/components/characters/Lagertha/PosePlate/lagertha.animations.ts b/src/components/characters/Lagertha/PosePlate/lagertha.animations.ts
+index b16fa43..f79ae6f 100644
+--- a/src/components/characters/Lagertha/PosePlate/lagertha.animations.ts
++++ b/src/components/characters/Lagertha/PosePlate/lagertha.animations.ts
+@@ -45,6 +45,43 @@ export const LAGERTHA_ANIMATIONS: Record<LagerthaAnimation, AnimationDefinition>
+       { at: 0.43, name: "impact" },
+     ],
+   },
++  attack2: {
++    duration: 0.92,
++    loop: false,
++    returnTo: "idle",
++    keyframes: [
++      { at: 0, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
++      { at: 0.14, pose: "crouch", x: -7, y: 0, rotation: -1.5, scale: 0.985 },
++      { at: 0.31, pose: "chamber", x: -9, y: -2, rotation: -1, scale: 0.985 },
++      { at: 0.46, pose: "follow", x: 16, y: -1, rotation: 1.8, scale: 1.025 },
++      { at: 0.59, pose: "slash", x: 19, y: 1, rotation: 1, scale: 1.02 },
++      { at: 0.76, pose: "reference", x: 7, y: 0, rotation: 0, scale: 1.005 },
++      { at: 0.92, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
++    ],
++    events: [
++      { at: 0, name: "attackStarted" },
++      { at: 0.47, name: "impact" },
++    ],
++  },
++  attack3: {
++    duration: 1.04,
++    loop: false,
++    returnTo: "idle",
++    keyframes: [
++      { at: 0, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
++      { at: 0.16, pose: "crouch", x: -8, y: 2, rotation: 2, scale: 0.98 },
++      { at: 0.34, pose: "spin", x: -4, y: -1, rotation: 8, scale: 0.99 },
++      { at: 0.51, pose: "slash", x: 14, y: -2, rotation: -2, scale: 1.025 },
++      { at: 0.64, pose: "impact", x: 20, y: 0, rotation: 1, scale: 1.035 },
++      { at: 0.78, pose: "follow", x: 14, y: 1, rotation: 2, scale: 1.02 },
++      { at: 0.91, pose: "reference", x: 5, y: 0, rotation: 0, scale: 1.005 },
++      { at: 1.04, pose: "reference", x: 0, y: 0, rotation: 0, scale: 1 },
++    ],
++    events: [
++      { at: 0, name: "attackStarted" },
++      { at: 0.64, name: "impact" },
++    ],
++  },
+   hit: {
+     duration: 0.44,
+     loop: false,
+diff --git a/src/components/characters/Lagertha/PosePlate/lagertha.types.ts b/src/components/characters/Lagertha/PosePlate/lagertha.types.ts
+index 26ce8a5..5e1d8ba 100644
+--- a/src/components/characters/Lagertha/PosePlate/lagertha.types.ts
++++ b/src/components/characters/Lagertha/PosePlate/lagertha.types.ts
+@@ -2,6 +2,8 @@ export type LagerthaAnimation =
+   | "idle"
+   | "move"
+   | "attack"
++  | "attack2"
++  | "attack3"
+   | "hit"
+   | "ultimate"
+   | "victory"
+diff --git a/src/components/characters/Ragnar/RagnarAnimator.ts b/src/components/characters/Ragnar/RagnarAnimator.ts
+index 79b6182..7cf9234 100644
+--- a/src/components/characters/Ragnar/RagnarAnimator.ts
++++ b/src/components/characters/Ragnar/RagnarAnimator.ts
+@@ -16,6 +16,8 @@ const PRIORITY: Record<RagnarState, number> = {
+   jump: 20,
+   victory: 30,
+   attack: 40,
++  attack2: 40,
++  attack3: 40,
+   hit: 60,
+   death: 100,
+ };
+@@ -25,6 +27,8 @@ const FADE: Record<RagnarState, number> = {
+   walk: 0.2,
+   run: 0.18,
+   attack: 0.1,
++  attack2: 0.1,
++  attack3: 0.1,
+   hit: 0.06,
+   death: 0.22,
+   victory: 0.22,
+diff --git a/src/components/characters/Ragnar/RagnarLab.tsx b/src/components/characters/Ragnar/RagnarLab.tsx
+index 42277dc..b718272 100644
+--- a/src/components/characters/Ragnar/RagnarLab.tsx
++++ b/src/components/characters/Ragnar/RagnarLab.tsx
+@@ -18,7 +18,9 @@ const ACTIONS: {
+   { state: "idle", label: "Reposo", hint: "Respira, gira la cabeza y asienta el hacha", rune: "ᚱ", oneShot: false },
+   { state: "walk", label: "Caminar", hint: "Zancada con relevo de peso y capa", rune: "ᚹ", oneShot: false },
+   { state: "run", label: "Correr", hint: "Carrera con inclinación y cabello al viento", rune: "ᚦ", oneShot: false },
+-  { state: "attack", label: "Atacar", hint: "Anticipación, tajo de hacha y recuperación", rune: "ᛏ", oneShot: true },
++  { state: "attack", label: "Tajo diagonal", hint: "Carga desde la cadera y golpe de hacha con recuperación", rune: "ᛏ", oneShot: true },
++  { state: "attack2", label: "Escudo y barrido", hint: "Desvía con el escudo y devuelve un corte amplio", rune: "ᛒ", oneShot: true },
++  { state: "attack3", label: "Hachazo descendente", hint: "Pivota, alza el hacha y descarga el peso en el golpe", rune: "ᚦ", oneShot: true },
+   { state: "hit", label: "Daño", hint: "Sacudida breve y vuelta a la guardia", rune: "ᛖ", oneShot: true },
+   { state: "death", label: "Muerte", hint: "Se desploma y mantiene la pose final", rune: "ᚾ", oneShot: true },
+   { state: "victory", label: "Victoria", hint: "Alza el hacha y sostiene la pose", rune: "ᛋ", oneShot: true },
+diff --git a/src/components/characters/Ragnar/animations.ts b/src/components/characters/Ragnar/animations.ts
+index d4d977c..48c2eaf 100644
+--- a/src/components/characters/Ragnar/animations.ts
++++ b/src/components/characters/Ragnar/animations.ts
+@@ -33,7 +33,7 @@ function loopClip(
+  * IDLE — breathing, tiny weight shifts, cloth and hair follow-through
+  * ------------------------------------------------------------------ */
+ 
+-const idle = loopClip(3.6, 12, (u) => {
++const idle = loopClip(3.6, 24, (u) => {
+   const t = u * TAU;
+   return {
+     rootY: 0.9 * Math.sin(t),
+@@ -73,59 +73,62 @@ function legCycle(
+   return [hip, flex, ankle];
+ }
+ 
+-const walk = loopClip(1.05, 16, (u) => {
+-  const p = u;
+-  const t = p * TAU;
+-  const near = legCycle(p, 8, 46, 4);
+-  const far = legCycle(p + 0.5, 8, 46, 4);
+-  const axe = Math.cos(t);
++const walk = loopClip(0.96, 24, (u) => {
++  const t = u * TAU;
++  const near = legCycle(u, 9, 38, 3.5);
++  const far = legCycle(u + 0.5, 9, 38, 3.5);
++  const stride = Math.sin(t);
++  const counter = Math.cos(t);
+   return {
+-    rootX: 1.4 * Math.sin(t + 0.5),
+-    rootY: -1 + 1.1 * Math.cos(2 * t),
+-    hipsRot: 2.8 * Math.cos(t) - 0.6,
+-    spineRot: 3.2 * Math.cos(t) + 1.2,
+-    spineY: -0.6,
+-    chest: 0.45 + 0.2 * Math.cos(2 * t),
+-    neckRot: -1.4 * Math.cos(t),
+-    headRot: 1.1 * Math.sin(t),
++    // Keep the pelvis low and let the knees absorb the step instead of bobbing like a puppet.
++    rootX: 0.7 * Math.sin(t + 0.35),
++    rootY: -0.6 + 1.15 * Math.max(0, Math.cos(2 * t)),
++    rootRot: 0.45 * Math.sin(t),
++    hipsRot: 2.2 * counter - 0.5,
++    spineRot: -2.4 * counter + 1.1,
++    spineY: -0.3 + 0.45 * Math.sin(2 * t + 0.4),
++    chest: 0.42 + 0.16 * Math.sin(t + 0.8),
++    neckRot: -0.7 * counter,
++    headRot: 0.8 * Math.sin(t * 0.5 + 0.4),
+     legNear: near,
+     legFar: far,
+-    axeArm: [24 + 9 * axe, 112 + 6 * axe, -128 - 8 * axe],
+-    shieldArm: [10 - 4 * axe, 55 + 3 * axe, -65 + 1],
+-    cloak: [-3 + 3.2 * Math.cos(t + 0.5), 3 + 2.6 * Math.cos(t + 1.1), 5 + 3.4 * Math.cos(t + 1.7)],
+-    hair: 2.4 * Math.sin(t + 0.4),
+-    braid: 3.4 * Math.sin(t + 0.1),
+-    beard: 1.8 * Math.sin(t + 0.6),
+-    axe: 1.6 * Math.sin(t),
+-    shield: 1.2 * Math.sin(t + 0.4),
++    // Arms counter-swing the legs; wrists and weapon lag a few frames behind.
++    axeArm: [21 + 8 * stride, 101 + 4 * counter, -116 - 5 * stride],
++    shieldArm: [8 - 5 * stride, 59 - 3 * counter, -68 + 2 * stride],
++    cloak: [-3 + 2.2 * Math.cos(t + 0.8), 3 + 2.7 * Math.cos(t + 1.35), 5 + 3.1 * Math.cos(t + 1.9)],
++    hair: 1.8 * Math.sin(t + 0.55),
++    braid: 2.8 * Math.sin(t + 0.15),
++    beard: 1.2 * Math.sin(t + 0.7),
++    axe: 1.1 * Math.sin(t + 1.15),
++    shield: 0.9 * Math.sin(t + 0.3),
+   };
+ });
+ 
+-const run = loopClip(0.66, 12, (u) => {
+-  const p = u;
+-  const t = p * TAU;
+-  const near = legCycle(p, 12, 72, 8);
+-  const far = legCycle(p + 0.5, 12, 72, 8);
+-  const axe = Math.cos(t);
++const run = loopClip(0.68, 20, (u) => {
++  const t = u * TAU;
++  const near = legCycle(u, 12, 58, 7);
++  const far = legCycle(u + 0.5, 12, 58, 7);
++  const stride = Math.sin(t);
+   return {
+-    rootX: 2.4 * Math.sin(t + 0.4),
+-    rootY: -4 + 3.2 * Math.cos(2 * t),
+-    hipsRot: 4.6 * Math.cos(t) - 1,
+-    spineRot: 12 + 3.4 * Math.cos(t),
+-    spineY: -1.6,
+-    chest: 0.85,
+-    neckRot: -6 - 1.6 * Math.cos(t),
+-    headRot: 1.6 - 1.2 * Math.cos(t),
++    rootX: 1.2 * Math.sin(t + 0.3),
++    rootY: -2.2 + 2.2 * Math.max(0, Math.cos(2 * t)),
++    rootRot: 0.8 * Math.sin(t),
++    hipsRot: 3.8 * Math.cos(t) - 0.8,
++    spineRot: 8 + 2.6 * Math.cos(t + 0.25),
++    spineY: -1,
++    chest: 0.72 + 0.12 * Math.sin(t + 0.6),
++    neckRot: -3 - 1.1 * Math.cos(t),
++    headRot: 1.3 * Math.sin(t + 0.2),
+     legNear: near,
+     legFar: far,
+-    axeArm: [18 + 26 * axe, 104 + 14 * axe, -116 - 20 * axe],
+-    shieldArm: [-2 - 6 * axe, 74 + 5 * axe, -72],
+-    cloak: [15 + 5 * Math.cos(t + 0.6), 11 + 4.4 * Math.cos(t + 1.2), 8 + 5 * Math.cos(t + 1.8)],
+-    hair: 6 + 3.2 * Math.sin(t),
+-    braid: 8 + 4.6 * Math.sin(t + 0.3),
+-    beard: 4 + 2.4 * Math.sin(t + 0.5),
+-    axe: 4 * Math.sin(t),
+-    shield: 2.4 * Math.sin(t + 0.5),
++    axeArm: [17 + 20 * stride, 103 + 9 * stride, -116 - 14 * stride],
++    shieldArm: [-1 - 8 * stride, 70 + 4 * stride, -72],
++    cloak: [12 + 4 * Math.cos(t + 0.6), 10 + 4 * Math.cos(t + 1.2), 8 + 4.6 * Math.cos(t + 1.8)],
++    hair: 5 + 2.5 * Math.sin(t),
++    braid: 7 + 3.5 * Math.sin(t + 0.3),
++    beard: 3 + 1.8 * Math.sin(t + 0.5),
++    axe: 3.2 * Math.sin(t),
++    shield: 1.8 * Math.sin(t + 0.4),
+   };
+ });
+ 
+@@ -242,6 +245,101 @@ const attack: RagnarClip = {
+   ],
+ };
+ 
++/* ------------------------------------------------------------------ *
++ * ATTACK 2 — shield check into a broad returning axe cut
++ * Each strike has a planted base, a hip-led turn and delayed cloak/hair follow-through.
++ * ------------------------------------------------------------------ */
++const attack2: RagnarClip = {
++  duration: 1.02,
++  loop: false,
++  autoReturn: "idle",
++  keys: [
++    key(0, {}),
++    key(0.16, {
++      rootX: -8, rootY: 2, hipsRot: -7, spineRot: -8, spineY: -1,
++      headRot: -2, neckRot: -2, axeArm: [35, 132, -150], axe: -5,
++      shieldArm: [22, 35, -28], shield: -9,
++      legNear: [14, 12, -26], legFar: [-14, 9, 8],
++      cloak: [-8, -4, -1], hair: -2, braid: -3, beard: -1,
++    }, "out"),
++    key(0.31, {
++      rootX: -13, rootY: 1, hipsRot: -11, spineRot: -13, spineY: -2,
++      headRot: -4, neckRot: -3, axeArm: [53, 144, -169], axe: -12,
++      shieldArm: [35, 25, -17], shield: -14,
++      legNear: [18, 15, -32], legFar: [-18, 12, 10],
++      cloak: [-12, -8, -3], hair: -4, braid: -6, beard: -2,
++    }, "in"),
++    key(0.46, {
++      rootX: 13, rootY: 1, hipsRot: 10, spineRot: 15, spineY: 1,
++      headRot: 5, neckRot: 3, axeArm: [-30, 22, 26], axe: 62,
++      shieldArm: [12, 56, -64], shield: 8,
++      legNear: [25, 23, -43], legFar: [-22, 19, 4],
++      cloak: [10, 9, 8], hair: 4, braid: 7, beard: 3,
++    }, "snap"),
++    key(0.61, {
++      rootX: 17, rootY: 0, hipsRot: 8, spineRot: 18, spineY: 1,
++      headRot: 4, neckRot: 2, axeArm: [-18, 42, 12], axe: 48,
++      shieldArm: [8, 62, -68],
++      legNear: [22, 18, -37], legFar: [-18, 16, 2],
++      cloak: [14, 12, 9], hair: 5, braid: 8, beard: 4,
++    }, "out"),
++    key(0.81, {
++      rootX: 6, hipsRot: 2, spineRot: 6, spineY: 0,
++      axeArm: [18, 96, -104], axe: 18, shieldArm: [11, 54, -64],
++      legNear: [13, 7, -20], legFar: [-12, 7, 7],
++      cloak: [5, 6, 6], hair: 2, braid: 4, beard: 1,
++    }, "inOut"),
++    key(1.02, {}, "inOut"),
++  ],
++};
++
++/* ------------------------------------------------------------------ *
++ * ATTACK 3 — a short pivot step and committed overhead chop
++ * ------------------------------------------------------------------ */
++const attack3: RagnarClip = {
++  duration: 1.08,
++  loop: false,
++  autoReturn: "idle",
++  keys: [
++    key(0, {}),
++    key(0.17, {
++      rootX: -9, rootY: 3, hipsRot: 8, spineRot: 10, spineY: 1,
++      neckRot: 2, headRot: 3, axeArm: [44, 148, -171], axe: -18,
++      shieldArm: [4, 67, -78], shield: -8,
++      legNear: [21, 22, -39], legFar: [-17, 8, 5],
++      cloak: [6, 4, 2], hair: 2, braid: 4,
++    }, "out"),
++    key(0.34, {
++      rootX: -15, rootY: 0, hipsRot: 12, spineRot: 14, spineY: 1,
++      neckRot: 1, headRot: 2, axeArm: [70, 158, -177], axe: -25,
++      shieldArm: [8, 72, -82], shield: -10,
++      legNear: [28, 28, -48], legFar: [-20, 12, 5],
++      cloak: [11, 8, 4], hair: 3, braid: 7, beard: 2,
++    }, "in"),
++    key(0.51, {
++      rootX: 16, rootY: 2, hipsRot: -8, spineRot: -8, spineY: -1,
++      neckRot: -2, headRot: -3, axeArm: [-56, 20, 6], axe: 82,
++      shieldArm: [20, 43, -54], shield: 13,
++      legNear: [31, 31, -54], legFar: [-23, 24, 0],
++      cloak: [-10, -8, -4], hair: -4, braid: -7, beard: -3,
++    }, "snap"),
++    key(0.68, {
++      rootX: 20, rootY: 2, hipsRot: -4, spineRot: -2, spineY: 0,
++      neckRot: 0, headRot: 1, axeArm: [-32, 38, -5], axe: 58,
++      shieldArm: [14, 51, -62],
++      legNear: [24, 24, -42], legFar: [-18, 20, -2],
++      cloak: [-8, -5, 0], hair: -2, braid: -4, beard: -1,
++    }, "out"),
++    key(0.86, {
++      rootX: 8, hipsRot: 0, spineRot: 4, spineY: 0,
++      axeArm: [16, 93, -106], axe: 20, shieldArm: [10, 55, -65],
++      legNear: [14, 8, -21], legFar: [-13, 7, 7],
++      cloak: [4, 5, 6], hair: 1, braid: 3, beard: 1,
++    }, "inOut"),
++    key(1.08, {}, "inOut"),
++  ],
++};
++
+ /* ------------------------------------------------------------------ *
+  * HIT
+  * ------------------------------------------------------------------ */
+@@ -701,6 +799,8 @@ export const RAGNAR_CLIPS: Record<RagnarState, RagnarClip> = {
+   walk,
+   run,
+   attack,
++  attack2,
++  attack3,
+   hit,
+   death,
+   victory,
+diff --git a/src/components/characters/Ragnar/types.ts b/src/components/characters/Ragnar/types.ts
+index b8abab9..164106f 100644
+--- a/src/components/characters/Ragnar/types.ts
++++ b/src/components/characters/Ragnar/types.ts
+@@ -11,6 +11,8 @@ export const RAGNAR_STATES = [
+   "walk",
+   "run",
+   "attack",
++  "attack2",
++  "attack3",
+   "hit",
+   "death",
+   "victory",
+diff --git a/src/components/hero-figure.tsx b/src/components/hero-figure.tsx
+index cf1193f..df76608 100644
+--- a/src/components/hero-figure.tsx
++++ b/src/components/hero-figure.tsx
+@@ -20,7 +20,7 @@ export type FigureState =
+ /** Battle figure states → Ragnar's articulated clips. */
+ const RAGNAR_STATE_MAP: Record<FigureState, RagnarState> = {
+   idle: "idle",
+-  walk: "walk",
++  walk: "run",
+   attack: "attack",
+   hit: "hit",
+   dead: "death",
+@@ -41,6 +41,18 @@ const FENRIR_STATE_MAP: Record<FigureState, FenrirState> = {
+   victory: "howl",
+ };
+ 
++function attackVariantIndex(variant: number): 0 | 1 | 2 {
++  return (((Math.floor(variant) % 3) + 3) % 3) as 0 | 1 | 2;
++}
++
++function ragnarAnimationFor(state: FigureState, variant: number): RagnarState {
++  if (state === "attack" || state === "shoot") {
++    const variants: RagnarState[] = ["attack", "attack2", "attack3"];
++    return variants[attackVariantIndex(variant)];
++  }
++  return RAGNAR_STATE_MAP[state];
++}
++
+ const LAGERTHA_ANIMATION_MAP: Record<FigureState, LagerthaAnimation> = {
+   idle: "idle",
+   walk: "move",
+@@ -52,6 +64,14 @@ const LAGERTHA_ANIMATION_MAP: Record<FigureState, LagerthaAnimation> = {
+   victory: "victory",
+ };
+ 
++function lagerthaAnimationFor(state: FigureState, variant: number): LagerthaAnimation {
++  if (state === "attack" || state === "shoot") {
++    const variants: LagerthaAnimation[] = ["attack", "attack2", "attack3"];
++    return variants[attackVariantIndex(variant)];
++  }
++  return LAGERTHA_ANIMATION_MAP[state];
++}
++
+ type HeroFigureProps = {
+   heroId: string;
+   size?: number;
+@@ -59,6 +79,8 @@ type HeroFigureProps = {
+   delay?: number;
+   battleUnitId?: string;
+   battleSpeed?: number;
++  /** Cycles authored attack choreography without changing turn/damage logic. */
++  attackVariant?: number;
+   onLagerthaHandle?: (unitId: string, handle: LagerthaCharacterHandle | null) => void;
+   onLagerthaEvent?: (unitId: string, event: LagerthaAnimationEvent) => void;
+ };
+@@ -76,6 +98,7 @@ export function HeroFigure({
+   delay = 0,
+   battleUnitId,
+   battleSpeed = 1,
++  attackVariant = 0,
+   onLagerthaHandle,
+   onLagerthaEvent,
+ }: HeroFigureProps) {
+@@ -112,7 +135,7 @@ export function HeroFigure({
+           <RagnarCharacter
+             art="kit"
+             frame="full"
+-            state={RAGNAR_STATE_MAP[state]}
++            state={ragnarAnimationFor(state, attackVariant)}
+           />
+         </div>
+       ) : isFenrir ? (
+@@ -123,11 +146,11 @@ export function HeroFigure({
+         <div className="hero-figure__lagertha">
+           <LagerthaPosePlate
+             ref={lagerthaHandleRef}
+-            animation={LAGERTHA_ANIMATION_MAP[state]}
++            animation={lagerthaAnimationFor(state, attackVariant)}
+             assetBaseUrl="/characters/lagertha-poses"
+             battleSpeed={battleSpeed}
+             x={size * 0.8}
+             y={size * 1.12}
+             characterHeight={size * 1.12}
+             onAnimationEvent={lagerthaEvent}
+           />
+diff --git a/src/lib/heroes.ts b/src/lib/heroes.ts
+index ce2e86b..0e4b02e 100644
+--- a/src/lib/heroes.ts
++++ b/src/lib/heroes.ts
+@@ -723,11 +723,14 @@ export function heroStats(def: HeroDef, level: number, stars: number) {
+ 
+ // ---------- Campaña ----------
+ export const CHAPTERS = [
+-  { id: 1, name: "La Costa de Kattegat", img: "/images/drakkar.jpg", desc: "Defiende el puerto de los saqueadores de Vestfold." },
+-  { id: 2, name: "El Bosque de Hierro", img: "/images/yggdrasil.jpg", desc: "Lobos gigantes y brujas acechan entre los árboles." },
++  { id: 1, name: "La Costa de Kattegat", img: "/images/bf-coast.jpg", desc: "Defiende el puerto de los saqueadores de Vestfold." },
++  { id: 2, name: "El Bosque de Hierro", img: "/images/bf-forest.jpg", desc: "Lobos gigantes y brujas acechan entre los árboles." },
+   { id: 3, name: "Saqueo de Northumbria", img: "/images/drakkar.jpg", desc: "El Gran Ejército Pagano desembarca en Inglaterra." },
+-  { id: 4, name: "Puertas de Helheim", img: "/images/yggdrasil.jpg", desc: "Los draugr abandonan sus túmulos." },
+-  { id: 5, name: "El Crepúsculo: Ragnarök", img: "/images/valhalla.jpg", desc: "La batalla final en la llanura de Vígríðr." },
++  { id: 4, name: "Puertas de Helheim", img: "/images/bf-helheim.jpg", desc: "Los draugr abandonan sus túmulos." },
++  { id: 5, name: "El Crepúsculo: Ragnarök", img: "/images/bf-ragnarok.jpg", desc: "La batalla final en la llanura de Vígríðr." },
++  { id: 6, name: "Jötunheim: El pacto de escarcha", img: "/images/bf-forest.jpg", desc: "Cruza el paso de los gigantes y descubre quién está quebrando la tregua del invierno." },
++  { id: 7, name: "Svartálfaheim: La forja perdida", img: "/images/bf-helheim.jpg", desc: "Desciende a Nidavellir: una conspiración amenaza con apagar las forjas de los enanos." },
++  { id: 8, name: "Vanaheim: La raíz del alba", img: "/images/valhalla.jpg", desc: "Sana el bosque de los Vanir antes de que una sombra antigua alcance Yggdrasil." },
+ ];
+ export const STAGES_PER_CHAPTER = 8;
+ export const TOTAL_STAGES = CHAPTERS.length * STAGES_PER_CHAPTER;
+@@ -738,8 +741,44 @@ const ENEMY_POOLS: string[][] = [
+   ["harald", "rollo", "uhtred", "leif", "ubbe"],
+   ["hel", "fenrir", "sigurd", "hvitserk", "floki"],
+   ["loki", "fenrir", "hel", "heimdall", "brynhildr"],
++  ["fenrir", "hel", "bjorn", "sigurd", "hvitserk"],
++  ["loki", "floki", "heimdall", "balder", "ivar"],
++  ["hel", "loki", "fenrir", "balder", "brynhildr"],
+ ];
+ 
++const CAMPAIGN_STORIES: Record<number, { title: string; story: string }[]> = {
++  6: [
++    { title: "El sendero del glaciar", story: "Una señal de humo rompe la calma del paso. Lagertha encuentra un estandarte marcado con una runa que nadie reconoce." },
++    { title: "La aldea sepultada", story: "Bajo la nieve, los supervivientes hablan de pasos enormes y de una voz que promete devolver el invierno eterno." },
++    { title: "Huellas del jotun", story: "Ragnar sigue las huellas hasta un círculo de piedras. Alguien ha despertado a los guardianes del valle." },
++    { title: "La cueva de los ecos", story: "Los ecos repiten los nombres del grupo. Una trampa de ilusión separa a los héroes en la oscuridad." },
++    { title: "El puente de hielo negro", story: "El puente se quiebra bajo el peso del enemigo. Hay que abrirse paso antes de que el deshielo los arrastre." },
++    { title: "Las runas quebradas", story: "Las runas revelan que el pacto entre humanos y gigantes fue saboteado desde dentro." },
++    { title: "El juramento de la giganta", story: "Una guardiana ofrece detener la tormenta si el grupo recupera la piedra robada de su clan." },
++    { title: "El rey bajo la montaña", story: "El rey jotun aguarda en la sala de hielo. Derrotarlo no bastará: los héroes deberán elegir si renuevan la tregua." },
++  ],
++  7: [
++    { title: "El taller sin fuego", story: "La entrada a Nidavellir está fría. Los martillos callaron y un aprendiz pide ayuda desde las galerías." },
++    { title: "La ciudad de los elfos oscuros", story: "Los callejones cambian de forma. Una facción acusa a los enanos de ocultar el corazón de la forja." },
++    { title: "Las galerías de Nidavellir", story: "Viejas vías mineras llevan al grupo bajo la montaña, perseguidos por centinelas de metal." },
++    { title: "El mapa de los nueve metales", story: "Un mapa grabado en una armadura señala tres sellos. Cada uno protege una parte de la forja." },
++    { title: "La forja de las voces", story: "El fuego mágico susurra recuerdos de sus dueños. Ragnar oye una advertencia sobre una traición inminente." },
++    { title: "Sabotaje en las sombras", story: "Las pistas conducen a un antiguo aliado. La batalla revela que Loki busca moldear un arma para romper los reinos." },
++    { title: "El corazón de la forja", story: "Lagertha mantiene la cámara mientras los artesanos reavivan el núcleo rúnico bajo una lluvia de chispas." },
++    { title: "El guardián de hierro", story: "Un coloso despierta para proteger el arma inconclusa. Hay que vencerlo sin destruir el taller que sostiene la montaña." },
++  ],
++  8: [
++    { title: "El puerto de las hojas", story: "La expedición llega a Vanaheim, donde las hojas caen hacia el cielo y las barcas navegan entre raíces luminosas." },
++    { title: "El río de las luces", story: "Espíritus extraviados bloquean el paso. Freya encuentra el rastro de una corrupción que avanza bajo el agua." },
++    { title: "El consejo de Vanir", story: "Los clanes discrepan sobre cerrar el reino. Los héroes deben ganarse su confianza protegiendo el consejo." },
++    { title: "Las raíces enfermas", story: "Una infección oscura trepa hacia Yggdrasil. El grupo sigue las raíces hasta un santuario olvidado." },
++    { title: "La cacería de las sombras", story: "Cazadores invisibles atacan entre los árboles. Lagertha descubre que responden a una runa robada." },
++    { title: "El árbol que recuerda", story: "Una memoria viva muestra el origen de la sombra: fue sellada para proteger a los nueve mundos, no para gobernarlos." },
++    { title: "La última flor", story: "La cura crece en un claro custodiado por criaturas corrompidas. El grupo abre paso sin dañar el bosque." },
++    { title: "La raíz del alba", story: "El guardián final protege el brote de luz. Al vencer, Ragnar y Lagertha restauran la alianza entre Vanir y Æsir." },
++  ],
++};
++
+ export function stageInfo(stageId: number) {
+   const chapterIdx = Math.floor((stageId - 1) / STAGES_PER_CHAPTER);
+   const within = (stageId - 1) % STAGES_PER_CHAPTER;
+@@ -749,10 +788,13 @@ export function stageInfo(stageId: number) {
+   const enemies = Array.from({ length: isBoss ? 5 : 3 + (within % 3) }, (_, i) => pool[(i + within) % pool.length]);
+   const enemyLevel = 1 + Math.floor((stageId - 1) * 1.15);
+   const scale = (isBoss ? 1.18 : 1) * (0.82 + stageId * 0.028);
++  const storyBeat = CAMPAIGN_STORIES[chapterIdx]?.[within];
+   return {
+     stageId,
+     chapter,
+     within: within + 1,
++    stageName: storyBeat?.title ?? `${chapter.name} · Etapa ${within + 1}`,
++    story: storyBeat?.story ?? chapter.desc,
+     isBoss,
+     enemies,
+     enemyLevel,
+diff --git a/tests/animationEngine.test.ts b/tests/animationEngine.test.ts
+index 7608d64..cabaf53 100644
+--- a/tests/animationEngine.test.ts
++++ b/tests/animationEngine.test.ts
+@@ -2,6 +2,8 @@ import test from "node:test";
+ import assert from "node:assert/strict";
+ import { LagerthaAnimationEngine } from "../src/components/characters/Lagertha/PosePlate/LagerthaAnimationEngine";
+ import { LAGERTHA_ANIMATIONS, ULTIMATE_IMPACT_SECONDS } from "../src/components/characters/Lagertha/PosePlate/lagertha.animations";
++import { RAGNAR_CLIPS, sampleClip } from "../src/components/characters/Ragnar/animations";
++import { stageInfo, TOTAL_STAGES } from "../src/lib/heroes";
+ 
+ function makeContext(): CanvasRenderingContext2D {
+   const target: Record<string, unknown> = { globalAlpha: 1 };
+@@ -17,7 +19,7 @@ function makeContext(): CanvasRenderingContext2D {
+   }) as unknown as CanvasRenderingContext2D;
+ }
+ 
+-test("all seven public states have a valid duration and deterministic keyframe endpoints", () => {
++test("all public states, including three distinct attack choreographies, have complete keyframes", () => {
+   for (const [name, definition] of Object.entries(LAGERTHA_ANIMATIONS)) {
+     assert.ok(definition.duration > 0, `${name} duration`);
+     assert.equal(definition.keyframes[0].at, 0, `${name} starts at zero`);
+@@ -26,7 +28,18 @@ test("all seven public states have a valid duration and deterministic keyframe e
+   }
+   assert.equal(LAGERTHA_ANIMATIONS.idle.loop, true);
+   assert.equal(LAGERTHA_ANIMATIONS.move.loop, true);
+-  assert.equal(LAGERTHA_ANIMATIONS.attack.loop, false);
++  for (const name of ["attack", "attack2", "attack3"] as const) {
++    assert.equal(LAGERTHA_ANIMATIONS[name].loop, false);
++    assert.ok(LAGERTHA_ANIMATIONS[name].events?.some((event) => event.name === "impact"));
++  }
++  assert.notDeepEqual(
++    LAGERTHA_ANIMATIONS.attack.keyframes.map((frame) => frame.pose),
++    LAGERTHA_ANIMATIONS.attack2.keyframes.map((frame) => frame.pose),
++  );
++  assert.notDeepEqual(
++    LAGERTHA_ANIMATIONS.attack2.keyframes.map((frame) => frame.pose),
++    LAGERTHA_ANIMATIONS.attack3.keyframes.map((frame) => frame.pose),
++  );
+ });
+ 
+ test("ultimate emits start, attack-start, impact and finish once at authored offsets", () => {
+@@ -116,3 +129,51 @@ test("moveTo eases the root coordinate and returns to idle on arrival", () => {
+     Object.defineProperty(globalThis, "performance", { configurable: true, value: previousPerformance });
+   }
+ });
++
++test("Ragnar's three battle attacks are authored as different weight shifts and weapon paths", () => {
++  const variants = ["attack", "attack2", "attack3"] as const;
++  const midposes = variants.map((variant) => sampleClip(RAGNAR_CLIPS[variant], RAGNAR_CLIPS[variant].duration * 0.48));
++  assert.notDeepEqual(midposes[0], midposes[1]);
++  assert.notDeepEqual(midposes[1], midposes[2]);
++  assert.ok(variants.every((variant) => RAGNAR_CLIPS[variant].autoReturn === "idle"));
++});
++
++test("new campaign worlds unlock 24 story stages with distinct boss finales", () => {
++  assert.equal(TOTAL_STAGES, 64);
++  const jotun = stageInfo(48);
++  const svartalf = stageInfo(56);
++  const vanaheim = stageInfo(64);
++  assert.equal(jotun.chapter.name, "Jötunheim: El pacto de escarcha");
++  assert.equal(svartalf.chapter.name, "Svartálfaheim: La forja perdida");
++  assert.equal(vanaheim.chapter.name, "Vanaheim: La raíz del alba");
++  for (const stage of [jotun, svartalf, vanaheim]) {
++    assert.equal(stage.isBoss, true);
++    assert.ok(stage.stageName.length > 3);
++    assert.ok(stage.story.length > 40);
++  }
++});
++
++test("Lagertha's three attack clips each announce their own synced impact", () => {
++  let now = 50_000;
++  const previousPerformance = globalThis.performance;
++  Object.defineProperty(globalThis, "performance", { configurable: true, value: { now: () => now } });
++  try {
++    const engine = new LagerthaAnimationEngine();
++    const ctx = makeContext();
++    for (const name of ["attack", "attack2", "attack3"] as const) {
++      const impactAt = LAGERTHA_ANIMATIONS[name].events?.find((event) => event.name === "impact")?.at;
++      assert.ok(impactAt !== undefined);
++      const seen: string[] = [];
++      engine.setEventHandler((event) => seen.push(event.name));
++      engine.play(name);
++      engine.draw(ctx, 800, 500, now, { characterHeight: 400, scale: 1, facing: "right", opacity: 1 });
++      now += impactAt * 1000 + 2;
++      engine.draw(ctx, 800, 500, now, { characterHeight: 400, scale: 1, facing: "right", opacity: 1 });
++      assert.equal(seen.filter((event) => event === "impact").length, 1, `${name} impact`);
++      now += 1500;
++    }
++    engine.dispose();
++  } finally {
++    Object.defineProperty(globalThis, "performance", { configurable: true, value: previousPerformance });
++  }
++});
